@@ -22,17 +22,31 @@ try:
 except Exception:
     gpd = None
 
-import os
-from pathlib import Path
 
-st.write("CWD:", os.getcwd())
-st.write("Files in CWD:", os.listdir(os.getcwd()))
-st.write("Files next to app:", [p.name for p in Path(__file__).resolve().parent.iterdir()])
+
 
 DATA_XLSX_DEFAULT = "Skupna tabela občine.xlsx"
 GEOJSON_DEFAULT = "si.json"
 SLO_BOUNDS = [[43.00, 11.38], [47.88, 17.61]]
 
+def find_excel_file():
+    # 1) poskusi točno ime
+    p = Path.cwd() / DATA_XLSX_DEFAULT
+    if p.exists():
+        return p
+
+    # 2) fallback: vzorec (deluje tudi pri šumnikih/normalizaciji)
+    candidates = list(Path.cwd().glob("*.xlsx"))
+    if not candidates:
+        return None
+
+    # če jih je več, izberi tistega, ki vsebuje "Skupna" ali "tabela"
+    for c in candidates:
+        if "skupna" in c.name.lower() and "tabela" in c.name.lower():
+            return c
+
+    # sicer vzemi prvega
+    return candidates[0]
 
 def _safe_str(x):
     return "" if x is None or (isinstance(x, float) and np.isnan(x)) else str(x)
@@ -358,7 +372,7 @@ with st.sidebar:
 if xlsx_file is not None:
     df = load_excel(xlsx_file)
 else:
-    default_path = Path(__file__).parent / DATA_XLSX_DEFAULT
+    default_path = find_excel_file()
     if not default_path.exists():
         st.error(f"Ne najdem privzetega Excela: {default_path.name}. Naloži Excel v stranski vrstici.")
         st.stop()
