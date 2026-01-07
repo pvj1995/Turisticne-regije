@@ -543,7 +543,7 @@ with table_col:
             use_container_width=True,
             height=680,
             hide_index=True,
-            column_config = make_localized_column_config(show_df),
+            column_config = make_localized_column_config(t),
             )
     else:
         st.markdown("**Tabela občin (znotraj regije)**")
@@ -567,7 +567,7 @@ with table_col:
             use_container_width=True,
             height=680,
             hide_index=True,
-            column_config = make_localized_column_config(show_df),
+            column_config = make_localized_column_config(tbl),
             )
     st.caption("Opomba: »Delež v regiji (%)« je prikazan za indikatorje, kjer se vrednosti seštevajo (ne za stopnje/indekse).")
 
