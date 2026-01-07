@@ -352,6 +352,12 @@ def render_map_municipalities(
 
     st.components.v1.html(m._repr_html_(), height=height, scrolling=False)
 
+def make_localized_column_config(df: pd.DataFrame):
+    cfg = {}
+    for c in df.columns:
+        if pd.api.types.is_numeric_dtype(df[c]):
+            cfg[c] = st.column_config.NumberColumn(format="localized")
+    return cfg
 
 
 # ---------------------------
@@ -365,7 +371,7 @@ with st.sidebar:
     xlsx_file = st.file_uploader("Naloži Excel (če ne uporabiš privzetega)", type=["xlsx"])
     geojson_file = st.file_uploader("Naloži GeoJSON občin (opcijsko)", type=["json", "geojson"])
     st.divider()
-    dashboard_mode = st.checkbox("Dashboard način (več indikatorjev)", value=False)
+    dashboard_mode = st.checkbox("Dashboard način (več indikatorjev)", value=True)
 
 
 # Load data
@@ -444,7 +450,14 @@ if selected_region == "Vse regije":
     for c in cols_to_show[1:]:
         show_df[c] = show_df[c].apply(lambda x: round(x, 2))
         #show_df[c] = show_df[c].apply(lambda x: format_si_number(x))
-    st.dataframe(show_df, use_container_width=True, height=260, hide_index=True)
+    st.dataframe(
+        show_df,
+        use_container_width=True,
+        height=260,
+        hide_index=True,
+        column_config = make_localized_column_config(show_df),
+        )
+    
 else:
     st.subheader("Povzetek izbrane regije")
 
