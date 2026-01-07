@@ -22,6 +22,12 @@ try:
 except Exception:
     gpd = None
 
+import os
+from pathlib import Path
+
+st.write("CWD:", os.getcwd())
+st.write("Files in CWD:", os.listdir(os.getcwd()))
+st.write("Files next to app:", [p.name for p in Path(__file__).resolve().parent.iterdir()])
 
 DATA_XLSX_DEFAULT = "Skupna tabela občine.xlsx"
 GEOJSON_DEFAULT = "si.json"
