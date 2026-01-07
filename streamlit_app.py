@@ -248,6 +248,7 @@ def render_map_regions(regions_geojson: dict, region_to_value: dict, indicator_l
 
     m = folium.Map(location=[45.65, 14.82], zoom_start=8, tiles="cartodbpositron", min_zoom=8, max_bounds=True)
 
+    m.fit_bounds(SLO_BOUNDS, padding= (10, 10))
     m.options['maxBounds'] = SLO_BOUNDS
     m.options['maxBoundsViscosity'] = 1.0
 
@@ -319,6 +320,7 @@ def render_map_municipalities(
 
     m = folium.Map(location=[45.65, 14.82], zoom_start=8, tiles="cartodbpositron", min_zoom=8, max_bounds=True)
     
+    m.fit_bounds(SLO_BOUNDS, padding= (10, 10))
     m.options['maxBounds'] = SLO_BOUNDS
     m.options['maxBoundsViscosity'] = 1.0
 
