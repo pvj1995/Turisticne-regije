@@ -538,7 +538,13 @@ with table_col:
         t[map_indicator] = t[map_indicator].apply(lambda x: round(x, 2))
         #t[map_indicator] = t[map_indicator].apply(lambda x: format_si_number(x))
         t = t.rename(columns={map_indicator: "Vrednost"})
-        st.dataframe(t, use_container_width=True, height=680, hide_index=True)
+        st.dataframe(
+            t,
+            use_container_width=True,
+            height=680,
+            hide_index=True,
+            column_config = make_localized_column_config(show_df),
+            )
     else:
         st.markdown("**Tabela občin (znotraj regije)**")
         reg_df = num_df[num_df["Turistična regija"] == selected_region].copy()
@@ -556,7 +562,13 @@ with table_col:
         tbl = tbl.sort_values("Vrednost", ascending=False, na_position="last")
         #tbl["Vrednost"] = tbl["Vrednost"].apply(lambda x: format_si_number(x))
         #tbl["Delež v regiji (%)"] = tbl["Delež v regiji (%)"].apply(lambda x: format_si_number(x, 1))
-        st.dataframe(tbl, use_container_width=True, height=680, hide_index=True)
+        st.dataframe(
+            tbl,
+            use_container_width=True,
+            height=680,
+            hide_index=True,
+            column_config = make_localized_column_config(show_df),
+            )
     st.caption("Opomba: »Delež v regiji (%)« je prikazan za indikatorje, kjer se vrednosti seštevajo (ne za stopnje/indekse).")
 
 st.caption("Skupni pogled: Skupni podatki za posamezne regije. Posamezna regija: meje občin ter deleži znotraj regije. Dodan je tudi delež Občine glede na Regijo (kjer je smiselno).")
