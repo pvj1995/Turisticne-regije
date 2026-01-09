@@ -29,6 +29,100 @@ DATA_XLSX_DEFAULT = "Skupna tabela občine.xlsx"
 GEOJSON_DEFAULT = "si.json"
 SLO_BOUNDS = [[43.00, 11.38], [47.88, 17.61]]
 
+AGG_RULES = {
+    'Površina območja (km2)': ("sum", None),
+    'Število prebivalcev (H2/2024)': ("sum", None),
+    'Povprečna starost prebivalcev': ("wmean", 'Število prebivalcev (H2/2024)'),
+    'Naravni prirast /1000 prebival.': ("wmean", 'Število prebivalcev (H2/2024)'),
+    'Prenočitve turistov SKUPAJ': ("sum", None),
+    'Prenočitve turistov Domači': ("sum", None),
+    'Prenočitve turistov\tTuji': ("sum", None),
+    'Delež tujih prenočitev': ("wmean", 'Prenočitve turistov SKUPAJ'),
+    'Prihodi turistov SKUPAJ': ("sum", None),
+    'Prihodi turistov Domači': ("sum", None),
+    'Prihodi turistov Tuji': ("sum", None),
+    'PDB turistov\tSKUPAJ': ("wmean", 'Prihodi turistov SKUPAJ'),
+    'PDB turistov\tDomači': ("wmean", 'Prihodi turistov Domači'),
+    'PDB turistov\tTuji': ("wmean", 'Prihodi turistov Tuji'),
+    'Nastanitvene kapacitete - Nedeljive enote': ("sum", None),
+    'Nastanitvene kapacitete - vsa ležišča': ("sum", None),
+    'Nastanitvene kapacitete - stalna ležišča': ("sum", None),
+    'Struktura nastanitvenih kapacitet - Sobe (nedeljive enote)\t- Hoteli in podobni obrati': ("sum", None),
+    'Struktura nastanitvenih kapacitet - Sobe (nedeljive enote)\t- Kampi': ("sum", None),
+    'Struktura nastanitvenih kapacitet - Sobe (nedeljive enote) - Druge vrste kapacitet': ("sum", None),
+    'Struktura nastanitvenih kapacitet - Stalna ležišča - Hoteli in podobni obrati': ("sum", None),
+    'Struktura nastanitvenih kapacitet - Stalna ležišča - Kampi': ("sum", None),
+    'Struktura nastanitvenih kapacitet - Stalna ležišča - Druge vrste kapacitet': ("sum", None),
+    'Delež stalnih ležišč v Hotelih ipd.': ("wmean", 'Nastanitvene kapacitete - stalna ležišča'),
+    'Povprečna letna zasedenost staln. ležišč': ("wmean", 'Nastanitvene kapacitete - stalna ležišča'),
+    'Ocenjena povp. Letna zased. sob (nedeljivih enot)': ("wmean", 'Nastanitvene kapacitete - Nedeljive enote'),
+    'Pritisk turizma na družbeni prostor (število stalnih ležišč / 100 prebivalcev)': ("wmean", 'Število prebivalcev (H2/2024)'),
+    'Gostota turizma': ("wmean", 'Površina območja (km2)'),
+    "Intenzivnost turizma (število nočitev na dan / 100 prebivalcev)": ("wmean", "Število prebivalcev (H2/2024)"),
+    "Delovno aktivni v  turizmu (OECD/WTO)": ("sum", None),
+    "Število zaposl. in samozaposl. v aktivnih podjetjih v Gostinstvu (I)": ("sum", None),
+    "Zaposleni v Gostinstvu (I) v registr.podjetjih in s.p.": ("sum", None),
+    "Zaposleni v nastan.dejav. (I55) v registr.podjetjih in s.p.": ("sum", None),
+    "Vsi delovni aktivni na območju": ("sum", None),
+    "Delež delovno aktivnih v turizmu (OECD/WTO)": ("wmean", "Vsi delovni aktivni na območju"),
+    "Število vseh vrst podjetij na območju": ("sum", None),
+    "Prihodek (v 1000 EUR) vseh podjetij na območju": ("sum", None),
+    "Število reg. podjetij in s.p.  v Gostinstvu (I)": ("sum", None),
+    "Prihodki reg.podjetij in s.p. v Gostinstvu (I)": ("sum", None),
+    "Dodana vrednost reg.podjetij v Gostinstvu (I)": ("sum", None),
+    "Dodana vrednost/zaposl. reg.podjetij Gostinstvu (I)": ("wmean", "Zaposleni v Gostinstvu (I) v registr.podjetjih in s.p."),
+    "Ocenjeni stroški dela v reg. podj. v Gostinski (I) dejavnosti": ("sum", None),
+    "Stroški dela na zaposl. na leto v reg. podj. v Gostinski (I) dejavnosti": ("wmean", "Zaposleni v Gostinstvu (I) v registr.podjetjih in s.p."),
+    "Delež stroškov dela v prihodkih v reg. podj. v Gostinstvu (I)": ("wmean", "Prihodki reg.podjetij in s.p. v Gostinstvu (I)"),
+    "Delež stroškov dela v dod vredn. v reg. podj. v Gostinstvu (I)": ("wmean", "Dodana vrednost reg.podjetij v Gostinstvu (I)"),
+    "EBITDA v reg.podjetjih in s.p. v Gostinstvu (I)": ("sum", None),
+    "EBITDA marža v reg.podjetjih in s.p. v Gostinstvu (I)": ("wmean", "Prihodki reg.podjetij in s.p. v Gostinstvu (I)"),
+    "Čisti dobiček/izguba v reg. podj. in s.p. v Gostinstvu (I)": ("sum", None),
+    "Sredstva v reg. Podjetjih in s.p. v Gostinstvu (I)": ("sum", None),
+    "Kapital v reg. Podjetjih in s.p. v Gostinstvu (I)": ("sum", None),
+    "Donosnost sredstev v reg. podjetjih in s.p. v Gostinstvu (I)": ("wmean", "Sredstva v reg. Podjetjih in s.p. v Gostinstvu (I)"),
+    "Donosnost kapitala v reg. podjetjih in s.p. v Gostinstvu (I)": ("wmean", "Kapital v reg. Podjetjih in s.p. v Gostinstvu (I)"),
+    "Dobičkovnost prihodkov v podjetjih in s.p. v Gostinstvu (I)": ("wmean", "Prihodki reg.podjetij in s.p. v Gostinstvu (I)"),
+    "Število reg. podjetij in s.p. v nastanitveni dejav. (I 55)": ("sum", None),
+    "Prihodki reg.podjetij in s.p. v nastanitveni dejav. (I 55)": ("sum", None),
+    "Dodana vrednost reg.podjetij v nastanitveni dejav. (I 55)": ("sum", None),
+    "Dodana vrednost/zaposl. V reg.podjetjih v nast.dejav. (I 55)": ("wmean", " Zaposleni v nastan.dejav. (I55) v registr.podjetjih in s.p."),
+    "Ocenjeni stroški dela v reg. podj. v nastan.gost. (I 55) dejavnosti": ("sum", None),
+    "Stroški dela na zaposl. na leto v reg. podj. v nast.gost. (I 55) dejavnosti": ("wmean", " Zaposleni v nastan.dejav. (I55) v registr.podjetjih in s.p."),
+    "Delež stroškov dela v prihodkih v reg. podj. v nast.gost.dej. (I 55)": ("wmean", "Prihodki reg.podjetij in s.p. v nastanitveni dejav. (I 55)"),
+    "Delež stroškov dela v dod vredn. v reg. podj. v nast.gost.dej. (I 55)": ("wmean", "Dodana vrednost reg.podjetij v nastanitveni dejav. (I 55)"),
+    "EBITDA v reg.podjetjih in s.p. v nastanitveni dejav. (I 55)": ("sum", None),
+    "EBITDA marža v reg.podjetjih v nastanitveni dejav. (I 55)": ("wmean", "Prihodki reg.podjetij in s.p. v nastanitveni dejav. (I 55)"),
+    "Čisti dobiček/izguba v reg. podj. v nastanitveni dejav. (I 55)": ("sum", None),
+    "Sredstva v reg. Podjetjih in s.p. v nastanitveni dejav. (I 55)": ("sum", None),
+    "Kapital v reg. Podjetjih in s.p. v nastanitveni dejav. (I 55)": ("sum", None),
+    "Donosnost sredstev v nastanitveni dejav. (I 55)": ("wmean", "Sredstva v reg. Podjetjih in s.p. v nastanitveni dejav. (I 55)"),
+    "Donosnost kapitala v nastanitveni dejav. (I 55)": ("wmean", "Kapital v reg. Podjetjih in s.p. v nastanitveni dejav. (I 55)"),
+    "Dobičkovnost prihodkov v nastanitveni dejav. (I 55)": ("wmean", "Prihodki reg.podjetij in s.p. v nastanitveni dejav. (I 55)"),
+    "Celotni prihodki v nastan. dejav. na prenočitev": ("wmean", "Prenočitve turistov SKUPAJ"),
+    "Ocenjeni prihodki iz nast. dejav. na prenočitev": ("wmean", "Prenočitve turistov SKUPAJ"),
+    "Ocenjeni prihodki iz nastan. dej. na razpoložljivo sobo (enoto)": ("wmean", 'Nastanitvene kapacitete - Nedeljive enote'),
+    "Ocenjeni prihodki iz nast.dej. na prodano sobo (ned.enoto)": ("wmean", "Prenočitve turistov SKUPAJ"),
+    "Poraba el.energije (MWh) Dejavnost Gostinstvo (I)": ("sum", None),
+    "Poraba el.energ. v kWh na realiz. 1000 EUR prihodka v Gostinstvu (I)": ("wmean", "Prihodki reg.podjetij in s.p. v Gostinstvu (I)"),
+    "Število kmetijskih  gospodarstev": ("sum", None),
+    "Ocena skupne ekonomske velikosti kmetij.gospodarstev": ("sum", None),
+    "Skupaj neto prejeti dohodek povp. na prebivalca": ("wmean", "Število prebivalcev (H2/2024)"),
+    "Neto prejeti dohodek iz dela, povp. na preb.": ("wmean", "Število prebivalcev (H2/2024)"),
+    "Neto prejeti dohodek iz premoženja, kapitala, idr.povp. na preb.": ("wmean", "Število prebivalcev (H2/2024)"),
+    "Povprečna mesečna neto  plača/zaposl. osebo (EUR)": ("wmean", "Vsi delovni aktivni na območju"),
+    "Povprečna neto plača izplačana na zaposl. osebo v Gostinstvu (I)": ("wmean", "Število zaposl. in samozaposl. v aktivnih podjetjih v Gostinstvu (I)"),
+    "Indeks neto plača v Gostinstvu (I) /pvp. plača v vseh dejavnostih": ("wmean", "Vsi delovni aktivni na območju"),
+    "Število izdanih gradbenih dovoljenj/1000 prebivalcev": ("wmean", "Število prebivalcev (H2/2024)"),
+    "Število počitniških stanovanj": ("sum", None),
+    "Delež naseljenih stanovanj od vseh razp.": ("mean", None),
+    "Komunalni odpadki, zbrani  z javnim odvozom (kg/prebivalca)": ("wmean", "Število prebivalcev (H2/2024)"),
+    "Štev.dijakov in študentov višjih strok. in visokošolsk.progr./1000 preb.": ("wmean", "Število prebivalcev (H2/2024)"),
+    "Število vseh stanovanj": ("sum", None),
+    "Delež naseljenih stanovanj": ("wmean", "Število vseh stanovanj"),
+}
+
+
 def find_excel_file():
     # 1) poskusi točno ime
     p = Path.cwd() / DATA_XLSX_DEFAULT
@@ -161,22 +255,94 @@ def try_load_geojson(path: Path):
     except Exception:
         return None
 
-def aggregate_indicator(df: pd.DataFrame, indicator: str, pop_col: str | None):
-    v = df[indicator].astype(float)
-    if is_rate_like(indicator):
-        if pop_col and pop_col in df.columns:
-            w = df[pop_col].astype(float)
-            mask = (~v.isna()) & (~w.isna()) & (w > 0)
-            if mask.any():
-                return float(np.average(v[mask], weights=w[mask]))
-        return float(v.mean(skipna=True))
-    else:
-        return float(v.sum(skipna=True))
+def aggregate_indicator_with_rules(df: pd.DataFrame, indicator: str, agg_rules: dict):
+    if "Celotni prihodki v nastan. dejav. na prenočitev" in indicator :
 
-def compute_region_aggregates(num_df: pd.DataFrame, regions: list[str], indicator_cols: list[str], pop_col: str | None):
-    out = pd.DataFrame({"Turistična regija": regions})
+        values1 = sum(df["Prihodki reg.podjetij in s.p. v nastanitveni dejav. (I 55)"].astype(float))
+        values2 = sum(df['Prenočitve turistov SKUPAJ'])
+        print(values1, values2)
+
+        
+        return values1/values2
+
+    if "Ocenjeni prihodki iz nast. dejav. na prenočitev" in indicator :
+
+        values1 = sum(df["Prihodki reg.podjetij in s.p. v nastanitveni dejav. (I 55)"].astype(float)) * 0.8
+        values2 = sum(df['Prenočitve turistov SKUPAJ'])
+        print(values1, values2)
+
+        
+        return values1/values2
+
+    if "Ocenjeni prihodki iz nast.dej. na prodano sobo (ned.enoto)" in indicator:
+
+        values1 = sum(df["Prihodki reg.podjetij in s.p. v nastanitveni dejav. (I 55)"] * 0.8)
+        
+        hoteli = sum(df['Struktura nastanitvenih kapacitet - Sobe (nedeljive enote)\t- Hoteli in podobni obrati'])
+        druge_enote = sum(df['Struktura nastanitvenih kapacitet - Sobe (nedeljive enote) - Druge vrste kapacitet'])
+        kampi = sum(df['Struktura nastanitvenih kapacitet - Sobe (nedeljive enote)\t- Kampi'])
+
+        vse_enote = hoteli + druge_enote + kampi
+
+        hoteli_zasedenost = 1.6* (hoteli/vse_enote)
+        kampi_zasedenost = 2.5* (kampi/vse_enote)
+        druge_zasedenost = 2 * (druge_enote/vse_enote)
+        
+        values2 = sum(df["Prenočitve turistov SKUPAJ"])/ (hoteli_zasedenost + kampi_zasedenost + druge_zasedenost)
+           
+        return values1/values2
+    
+    if "Ocenjeni prihodki iz nastan. dej. na razpoložljivo sobo (enoto)" in indicator:
+        
+        values1 = sum(df["Prihodki reg.podjetij in s.p. v nastanitveni dejav. (I 55)"] * 0.8)
+        
+        hoteli = sum(df['Struktura nastanitvenih kapacitet - Sobe (nedeljive enote)\t- Hoteli in podobni obrati'])
+        druge_enote = sum(df['Struktura nastanitvenih kapacitet - Sobe (nedeljive enote) - Druge vrste kapacitet'])
+        kampi = sum(df['Struktura nastanitvenih kapacitet - Sobe (nedeljive enote)\t- Kampi'])
+
+        values2 = (hoteli + druge_enote) * 365 + kampi * 153
+
+        return values1/values2
+
+    if indicator not in agg_rules:
+    
+        return df[indicator].sum(skipna=True)
+    
+    rule, weight_col = agg_rules[indicator]
+
+    values = df[indicator].astype(float)
+
+    if rule == "sum":
+        return float(values.sum(skipna=True))
+    if rule == "mean":
+        return float(values.mean(skipna=True))
+    if rule == "wmean":
+        
+        if weight_col is None or weight_col not in df.columns:
+            return float(values.mean(skipna=True))
+        
+        weights = df[weight_col].astype(float)
+        mask = (~values.isna()) & (~weights.isna()) & (weights > 0)
+
+        if not mask.any():
+            
+            return np.nan
+        
+        return float(np.average(values[mask], weights= weights[mask]))
+    
+    return float(values.sum(skipna = True))
+
+def compute_region_aggregates1(num_df, regions, indicator_cols, agg_rules):
+    out = pd.DataFrame({"Turistična regija" : regions})
+
     for ind in indicator_cols:
-        out[ind] = [aggregate_indicator(num_df[num_df["Turistična regija"] == r], ind, pop_col) for r in regions]
+        out[ind] = [aggregate_indicator_with_rules(
+            num_df[num_df["Turistična regija"] == r],
+            ind,
+            agg_rules
+        )
+        for r in regions]
+    
     return out
 
 def get_geojson_name_prop(geojson_obj, candidates=("name","NAME","Občina","OBČINA")):
@@ -436,7 +602,7 @@ if dashboard_mode:
 
 # agregati regij
 agg_needed = [map_indicator] + [i for i in dash_inds if i != map_indicator]
-region_agg = compute_region_aggregates(num_df, regions, agg_needed, pop_col)
+region_agg = compute_region_aggregates1(num_df, regions, agg_needed, AGG_RULES)
 region_to_value_map = dict(zip(region_agg["Turistična regija"], region_agg[map_indicator]))
 
 # regijski geojson (dissolve)
@@ -464,10 +630,10 @@ else:
     st.subheader("Povzetek izbrane regije")
 
     reg_df = num_df[num_df["Turistična regija"] == selected_region].copy()
-    reg_total = aggregate_indicator(reg_df, map_indicator, pop_col)
+    reg_total = aggregate_indicator_with_rules(reg_df, map_indicator, AGG_RULES)
 
     # "Slovenija total" – smiselno le za seštevne indikatorje
-    sl_total = aggregate_indicator(num_df, map_indicator, pop_col)
+    sl_total = aggregate_indicator_with_rules(num_df, map_indicator, AGG_RULES)
 
     share_si = np.nan
     if (not is_rate_like(map_indicator)) and sl_total and not np.isnan(sl_total) and sl_total != 0:
@@ -492,7 +658,7 @@ else:
             v_reg = float(region_agg.loc[region_agg["Turistična regija"] == selected_region, ind].iloc[0])
 
             # total Slovenije za ta indikator
-            v_slo = aggregate_indicator(num_df, ind, pop_col)
+            v_slo = aggregate_indicator_with_rules(num_df, ind, AGG_RULES)
 
             # delež Slovenije (samo za seštevne indikatorje)
             share = np.nan
@@ -550,7 +716,7 @@ with table_col:
     else:
         st.markdown("**Tabela občin (znotraj regije)**")
         reg_df = num_df[num_df["Turistična regija"] == selected_region].copy()
-        reg_total = aggregate_indicator(reg_df, map_indicator, pop_col)
+        reg_total = aggregate_indicator_with_rules(reg_df, map_indicator, AGG_RULES)
 
         tbl = pd.DataFrame({
             "Občina": reg_df["Občine"].astype(str),
