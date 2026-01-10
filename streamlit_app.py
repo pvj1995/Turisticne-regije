@@ -268,7 +268,6 @@ def find_col(df: pd.DataFrame, wanted: list[str]) -> str | None:
                 return orig
     return None
 
-@st.cache_data(show_spinner=False)
 def load_excel(path_or_buffer) -> pd.DataFrame:
     df0 = pd.read_excel(path_or_buffer, header=0)
     c_ob = find_col(df0, ["obcine", "obcina"])
@@ -293,7 +292,7 @@ def try_load_geojson(path: Path):
         return None
 
 
-@st.cache_data(show_spinner=False)
+
 def aggregate_indicator_with_rules(df: pd.DataFrame, indicator: str, agg_rules: dict):
     if "Celotni prihodki v nastan. dejav. na prenočitev" in indicator :
 
@@ -372,7 +371,7 @@ def aggregate_indicator_with_rules(df: pd.DataFrame, indicator: str, agg_rules: 
     return float(values.sum(skipna = True))
 
 
-@st.cache_data(show_spinner=False)
+
 def compute_region_aggregates1(num_df, regions, indicator_cols, agg_rules, group_col:str):
     out = pd.DataFrame({group_col : regions})
 
@@ -439,6 +438,7 @@ def _palette(val, vmin, vmax):
     idx = sum(q > b for b in bins)
     return colors[idx]
 
+@st.cache_data(show_spinner=False)
 def render_map_regions(regions_geojson: dict, region_to_value: dict, indicator_label: str,group_col: str, height=680):
     if folium is None or regions_geojson is None:
         st.info("Zemljevid ni na voljo (manjka folium ali GeoJSON).")
@@ -486,7 +486,7 @@ def render_map_regions(regions_geojson: dict, region_to_value: dict, indicator_l
 
     st.components.v1.html(m._repr_html_(), height=height, scrolling=False)
 
-
+@st.cache_data(show_spinner=False)
 def render_map_municipalities(
     geojson_obj,
     name_prop: str,
@@ -577,6 +577,24 @@ def make_localized_column_config(df: pd.DataFrame):
             cfg[c] = st.column_config.NumberColumn(format="localized")
     return cfg
 
+def column_config_for_indicator(indicator_name: str):
+    
+    if is_percent_like(indicator_name):
+        # values are 0..1, show as percent
+        return st.column_config.NumberColumn(
+            indicator_name,
+            format="%.1f %%",   # show 45.0 %
+        )
+    return st.column_config.NumberColumn(indicator_name, format="localized")
+
+
+@st.cache_data(show_spinner=False)
+def load_geojson_from_upload_or_file(uploaded, default_path: Path):
+    if uploaded is not None:
+        return json.load(uploaded)
+    return try_load_geojson(default_path)
+
+
 
 # ---------------------------
 # UI
@@ -615,6 +633,12 @@ indicator_cols = [c for c in df.columns if c not in meta_cols]
 pop_candidates = [c for c in indicator_cols if "prebival" in c.lower() and "število" in c.lower()]
 pop_col = pop_candidates[0] if pop_candidates else None
 
+geojson_obj = load_geojson_from_upload_or_file(
+    geojson_file,
+    Path(__file__).parent / GEOJSON_DEFAULT
+)
+name_prop = get_geojson_name_prop(geojson_obj) if geojson_obj else None
+
 # Kandidati za poglede (zavihki)
 VIEW_CANDIDATES = [
     ("Turistične regije", ["turisticna regija", "turisticne regije"]),
@@ -631,10 +655,10 @@ for title, wanted in VIEW_CANDIDATES:
     if col is not None:
         views.append((title, col))
 
+view_labels = [v[0] for v in views]
+selected_view_label = st.selectbox("Pogled", view_labels, index=0)
 
 
-tab_titles = [v[0] for v in views]
-tabs = st.tabs(tab_titles)
 
 def render_view(view_title: str, group_col: str):
     st.caption(f"**Pogled:** {view_title} (stolpec: `{group_col}`)")
@@ -646,7 +670,7 @@ def render_view(view_title: str, group_col: str):
     df_regions = df[df[group_col].notna()].copy()
     regions = sorted(df_regions[group_col].dropna().unique().tolist())
     regions_with_all = ["Vse regije"] + regions
-    
+    print("4321")
     num_df = df_regions.copy()
     
     for c in indicator_cols:
@@ -662,16 +686,7 @@ def render_view(view_title: str, group_col: str):
         df_slo_total[c] = parse_numeric(df_slo_total[c])
 
 
-    # GeoJSON občin
-    if geojson_file is not None:
-        try:
-            geojson_obj = json.load(geojson_file)
-        except Exception:
-            geojson_obj = None
-    else:
-        geojson_obj = try_load_geojson(Path(__file__).parent / GEOJSON_DEFAULT)
 
-    name_prop = get_geojson_name_prop(geojson_obj) if geojson_obj else None
 
     # mapping občina -> regija (normalizirano)
     muni_to_region = {normalize_name(o): r for o, r in zip(df_regions["Občine"], df_regions[group_col])}
@@ -714,7 +729,7 @@ def render_view(view_title: str, group_col: str):
             use_container_width=True,
             height=260,
             hide_index=True,
-            column_config = make_localized_column_config(show_df),
+            #column_config = make_localized_column_config(show_df),
             )
         
     else:
@@ -801,7 +816,7 @@ def render_view(view_title: str, group_col: str):
                 use_container_width=True,
                 height=680,
                 hide_index=True,
-                column_config = make_localized_column_config(t),
+                #column_config = column_config_for_indicator(map_indicator),
                 )
         else:
             st.markdown("**Tabela občin (znotraj regije)**")
@@ -824,12 +839,13 @@ def render_view(view_title: str, group_col: str):
                 use_container_width=True,
                 height=680,
                 hide_index=True,
-                column_config = make_localized_column_config(tbl),
+                #column_config = make_localized_column_config(tbl),
                 )
         st.caption("Opomba: »Delež v regiji (%)« je prikazan za indikatorje, kjer se vrednosti seštevajo (ne za stopnje/indekse).")
 
-for (tab, (title, group_col)) in zip(tabs, views):
-    with tab:
-        render_view(title, group_col)
+
+
+title, group_col = next(v for v in views if v[0] == selected_view_label)
+render_view(title, group_col)
 
 st.caption("Skupni pogled: Skupni podatki za posamezne regije. Posamezna regija: meje občin ter deleži znotraj regije. Dodan je tudi delež Občine glede na Regijo (kjer je smiselno).")
