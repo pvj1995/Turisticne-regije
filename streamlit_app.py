@@ -438,6 +438,23 @@ def _palette(val, vmin, vmax):
     idx = sum(q > b for b in bins)
     return colors[idx]
 
+# def make_localized_column_config(df: pd.DataFrame):
+#     cfg = {}
+#     for c in df.columns:
+#         if pd.api.types.is_numeric_dtype(df[c]):
+#             cfg[c] = st.column_config.NumberColumn(format="localized")
+#     return cfg
+
+def make_localized_column_config(df: pd.DataFrame):
+    cfg = {}
+    for c in df.columns:
+        if pd.api.types.is_numeric_dtype(df[c]):
+            if is_percent_like(c):
+                cfg[c] = st.column_config.NumberColumn(format="percentage")
+            else:
+                cfg[c] = st.column_config.NumberColumn(format="localized")
+    return cfg
+
 @st.cache_data(show_spinner=False)
 def render_map_regions(regions_geojson: dict, region_to_value: dict, indicator_label: str,group_col: str, height=680):
     if folium is None or regions_geojson is None:
@@ -570,23 +587,6 @@ def render_map_municipalities(
     st.components.v1.html(m._repr_html_(), height=height, scrolling=False)
    
 
-def make_localized_column_config(df: pd.DataFrame):
-    cfg = {}
-    for c in df.columns:
-        if pd.api.types.is_numeric_dtype(df[c]):
-            cfg[c] = st.column_config.NumberColumn(format="localized")
-    return cfg
-
-def column_config_for_indicator(indicator_name: str):
-    
-    if is_percent_like(indicator_name):
-        # values are 0..1, show as percent
-        return st.column_config.NumberColumn(
-            indicator_name,
-            format="%.1f %%",   # show 45.0 %
-        )
-    return st.column_config.NumberColumn(indicator_name, format="localized")
-
 
 @st.cache_data(show_spinner=False)
 def load_geojson_from_upload_or_file(uploaded, default_path: Path):
@@ -670,7 +670,7 @@ def render_view(view_title: str, group_col: str):
     df_regions = df[df[group_col].notna()].copy()
     regions = sorted(df_regions[group_col].dropna().unique().tolist())
     regions_with_all = ["Vse regije"] + regions
-    print("4321")
+
     num_df = df_regions.copy()
     
     for c in indicator_cols:
@@ -729,7 +729,7 @@ def render_view(view_title: str, group_col: str):
             use_container_width=True,
             height=260,
             hide_index=True,
-            #column_config = make_localized_column_config(show_df),
+            column_config = make_localized_column_config(show_df),
             )
         
     else:
@@ -816,7 +816,7 @@ def render_view(view_title: str, group_col: str):
                 use_container_width=True,
                 height=680,
                 hide_index=True,
-                #column_config = column_config_for_indicator(map_indicator),
+                column_config = make_localized_column_config(tbl),
                 )
         else:
             st.markdown("**Tabela občin (znotraj regije)**")
@@ -839,7 +839,7 @@ def render_view(view_title: str, group_col: str):
                 use_container_width=True,
                 height=680,
                 hide_index=True,
-                #column_config = make_localized_column_config(tbl),
+                column_config = make_localized_column_config(tbl),
                 )
         st.caption("Opomba: »Delež v regiji (%)« je prikazan za indikatorje, kjer se vrednosti seštevajo (ne za stopnje/indekse).")
 
