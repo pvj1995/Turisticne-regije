@@ -233,9 +233,9 @@ def format_pct(x, decimals=1):
     
 def format_indicator_value_tables(indicator: str, x):
     # deleži/indeksi so v podatkih v obliki 0.45 -> prikaz 45 %
-    if is_percent_like(indicator):
-        num = x * 100
-        return round(num, 1)
+    # if is_percent_like(indicator):
+    #     num = x * 100
+    #     return round(num, 1)
     # vse ostalo ostane normalno število
     return round(x, 2)
 
@@ -810,13 +810,20 @@ def render_view(view_title: str, group_col: str):
             t = region_agg[[group_col, map_indicator]].copy()
             t = t.sort_values(map_indicator, ascending=False, na_position="last")
             t[map_indicator] = t[map_indicator].apply(lambda x: format_indicator_value_tables(map_indicator, x))
+            cfg = make_localized_column_config(t)
+            
+            old_key= next(iter(cfg))
+            cfg["Vrednost"] = cfg.pop(old_key)
+
+
             t = t.rename(columns={map_indicator: "Vrednost"})
+
             st.dataframe(
                 t,
                 use_container_width=True,
                 height=680,
                 hide_index=True,
-                column_config = make_localized_column_config(tbl),
+                column_config = cfg,
                 )
         else:
             st.markdown("**Tabela občin (znotraj regije)**")
