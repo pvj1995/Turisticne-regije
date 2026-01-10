@@ -450,7 +450,7 @@ def make_localized_column_config(df: pd.DataFrame):
     for c in df.columns:
         if pd.api.types.is_numeric_dtype(df[c]):
             if is_percent_like(c):
-                cfg[c] = st.column_config.NumberColumn(format="percentage")
+                cfg[c] = st.column_config.NumberColumn(format="percent")
             else:
                 cfg[c] = st.column_config.NumberColumn(format="localized")
     return cfg
