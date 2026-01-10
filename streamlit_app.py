@@ -27,7 +27,7 @@ except Exception:
 
 DATA_XLSX_DEFAULT = "Skupna tabela občine.xlsx"
 GEOJSON_DEFAULT = "si.json"
-SLO_BOUNDS = [[43.00, 11.38], [47.88, 17.61]]
+SLO_BOUNDS = [[41.00, 10.38], [49.88, 18.61]]
 
 AGG_RULES = {
     'Površina območja (km2)': ("sum", None),
@@ -120,6 +120,15 @@ AGG_RULES = {
     "Štev.dijakov in študentov višjih strok. in visokošolsk.progr./1000 preb.": ("wmean", "Število prebivalcev (H2/2024)"),
     "Število vseh stanovanj": ("sum", None),
     "Delež naseljenih stanovanj": ("wmean", "Število vseh stanovanj"),
+    "GINI Indeks - sezonskost prenočitev": ("wmean", "Prenočitve turistov SKUPAJ"),
+    "Delež vseh prenočitev - Domači trg": ("wmean", "Prenočitve turistov SKUPAJ"),
+    "Delež vseh prenočitev - DACH trgi": ("wmean", "Prenočitve turistov SKUPAJ"),
+    "Delež vseh prenočitev - Italijanski trg": ("wmean", "Prenočitve turistov SKUPAJ"),
+    "Delež vseh prenočitev - Vzh.evropski trgi (PL,CZ,HU,SK,LIT,LTV,EST,RU,UKR)": ("wmean", "Prenočitve turistov SKUPAJ"),
+    "Delež vseh prenočitev - Drugi zah.in sev. evropski trgi (ES,P, F,Benelux, Skandinavske države)": ("wmean", "Prenočitve turistov SKUPAJ"),
+    "Delež vseh prenočitev - Prekomorski trgi (ZDA, VB, CAN, AU, Azija)": ("wmean", "Prenočitve turistov SKUPAJ"),
+    "Delež vseh prenočitev - Trgi JV Evrope": ("wmean", "Prenočitve turistov SKUPAJ"),
+    "Delež vseh prenočitev - Vsi drugi tuji trgi": ("wmean", "Prenočitve turistov SKUPAJ"),
 }
 
 
@@ -289,7 +298,7 @@ def aggregate_indicator_with_rules(df: pd.DataFrame, indicator: str, agg_rules: 
 
         values1 = sum(df["Prihodki reg.podjetij in s.p. v nastanitveni dejav. (I 55)"].astype(float))
         values2 = sum(df['Prenočitve turistov SKUPAJ'])
-        print(values1, values2)
+
 
         
         return values1/values2
@@ -298,7 +307,7 @@ def aggregate_indicator_with_rules(df: pd.DataFrame, indicator: str, agg_rules: 
 
         values1 = sum(df["Prihodki reg.podjetij in s.p. v nastanitveni dejav. (I 55)"].astype(float)) * 0.8
         values2 = sum(df['Prenočitve turistov SKUPAJ'])
-        print(values1, values2)
+  
 
         
         return values1/values2
@@ -363,12 +372,12 @@ def aggregate_indicator_with_rules(df: pd.DataFrame, indicator: str, agg_rules: 
 
 
 
-def compute_region_aggregates1(num_df, regions, indicator_cols, agg_rules):
-    out = pd.DataFrame({"Turistična regija" : regions})
+def compute_region_aggregates1(num_df, regions, indicator_cols, agg_rules, group_col:str):
+    out = pd.DataFrame({group_col : regions})
 
     for ind in indicator_cols:
         out[ind] = [aggregate_indicator_with_rules(
-            num_df[num_df["Turistična regija"] == r],
+            num_df[num_df[group_col] == r],
             ind,
             agg_rules
         )
@@ -389,8 +398,10 @@ def get_geojson_name_prop(geojson_obj, candidates=("name","NAME","Občina","OBČ
             return c
     return list(sample_props.keys())[0]
 
+
+
 @st.cache_data(show_spinner=False)
-def build_region_geojson_from_municipalities(geojson_obj: dict, name_prop: str, muni_to_region: dict) -> dict | None:
+def build_region_geojson_from_municipalities(geojson_obj: dict, name_prop: str, muni_to_region: dict, group_col:str) -> dict | None:
     if gpd is None or geojson_obj is None:
         return None
     try:
@@ -401,12 +412,12 @@ def build_region_geojson_from_municipalities(geojson_obj: dict, name_prop: str, 
             gdf = gdf.set_crs(4326)
 
         gdf["__obcina__"] = gdf[name_prop].apply(normalize_name)
-        gdf["Turistična regija"] = gdf["__obcina__"].map(muni_to_region)
-        gdf = gdf[gdf["Turistična regija"].notna()].copy()
+        gdf[group_col] = gdf["__obcina__"].map(muni_to_region)
+        gdf = gdf[gdf[group_col].notna()].copy()
         if gdf.empty:
             return None
 
-        reg_gdf = gdf.dissolve(by="Turistična regija", as_index=False)
+        reg_gdf = gdf.dissolve(by=group_col, as_index=False)
         try:
             reg_gdf["geometry"] = reg_gdf["geometry"].simplify(tolerance=0.0005, preserve_topology=True)
         except Exception:
@@ -427,7 +438,7 @@ def _palette(val, vmin, vmax):
     idx = sum(q > b for b in bins)
     return colors[idx]
 
-def render_map_regions(regions_geojson: dict, region_to_value: dict, indicator_label: str, height=680):
+def render_map_regions(regions_geojson: dict, region_to_value: dict, indicator_label: str,group_col: str, height=680):
     if folium is None or regions_geojson is None:
         st.info("Zemljevid ni na voljo (manjka folium ali GeoJSON).")
         return
@@ -438,36 +449,39 @@ def render_map_regions(regions_geojson: dict, region_to_value: dict, indicator_l
     # dodamo vrednost v properties za tooltip
     for feat in gj.get("features", []):
         props = feat.get("properties", {}) or {}
-        reg = props.get("Turistična regija")
+        reg = props.get(group_col)
         val = region_to_value.get(reg, np.nan)
         props["_vrednost_fmt"] = format_indicator_value_map(indicator_label,val)
         feat["properties"] = props
 
-    m = folium.Map(location=[45.65, 14.82], zoom_start=8, tiles="cartodbpositron", min_zoom=8, max_bounds=True)
+    m = folium.Map(location=[45.65, 14.82], tiles="cartodbpositron",zoom_start= 8, max_bounds=True, min_zoom= 7)
 
-    m.fit_bounds(SLO_BOUNDS, padding= (10, 10))
+
     m.options['maxBounds'] = SLO_BOUNDS
-    m.options['maxBoundsViscosity'] = 1.0
+    m.options['maxBoundsViscosity'] = 0.7
 
     vals = [v for v in region_to_value.values() if v is not None and not (isinstance(v, float) and np.isnan(v))]
     vmin = float(np.nanmin(vals)) if vals else 0.0
     vmax = float(np.nanmax(vals)) if vals else 1.0
 
     def style_fn(feature):
-        reg = feature.get("properties", {}).get("Turistična regija")
+        reg = feature.get("properties", {}).get(group_col)
         val = region_to_value.get(reg, np.nan)
         return {"fillColor": _palette(val, vmin, vmax), "color": "#111111", "weight": 2.2, "fillOpacity": 0.70}
 
-    folium.GeoJson(
+    layer = folium.GeoJson(
         gj,
         name="Turistične regije",
         style_function=style_fn,
         tooltip=folium.GeoJsonTooltip(
-            fields=["Turistična regija", "_vrednost_fmt"],
+            fields=[group_col, "_vrednost_fmt"],
             aliases=["Regija:", f"{indicator_label}:"],
             sticky=True
         )
     ).add_to(m)
+
+    bounds = layer.get_bounds()
+    m.fit_bounds(bounds, padding= (40, 40), max_zoom=8)
 
     st.components.v1.html(m._repr_html_(), height=height, scrolling=False)
 
@@ -515,11 +529,11 @@ def render_map_municipalities(
     gj_in = {"type": "FeatureCollection", "features": feats_in}
     gj_out = {"type": "FeatureCollection", "features": feats_out}
 
-    m = folium.Map(location=[45.65, 14.82], zoom_start=8, tiles="cartodbpositron", min_zoom=8, max_bounds=True)
+    m = folium.Map(location=[45.65, 14.82], tiles="cartodbpositron", max_bounds=True, min_zoom= 7)
     
-    m.fit_bounds(SLO_BOUNDS, padding= (10, 10))
+
     m.options['maxBounds'] = SLO_BOUNDS
-    m.options['maxBoundsViscosity'] = 1.0
+    m.options['maxBoundsViscosity'] = 0.7
 
     # 1) IZVEN REGIJE (brez tooltipa)
     def style_out(feature):
@@ -538,7 +552,7 @@ def render_map_municipalities(
         val = muni_to_value.get(nm, np.nan)
         return {"fillColor": _palette(val, vmin, vmax), "color": "#111111", "weight": 0.9, "fillOpacity": 0.75}
 
-    folium.GeoJson(
+    layer = folium.GeoJson(
         gj_in,
         name="Občine (v regiji)",
         style_function=style_in,
@@ -549,7 +563,10 @@ def render_map_municipalities(
         )
     ).add_to(m)
 
+    bounds = layer.get_bounds()
+    m.fit_bounds(bounds, padding= (40, 40), max_zoom=9)
     st.components.v1.html(m._repr_html_(), height=height, scrolling=False)
+   
 
 def make_localized_column_config(df: pd.DataFrame):
     cfg = {}
@@ -590,185 +607,227 @@ if "Občine" not in df.columns or "Turistična regija" not in df.columns:
 df = df.copy()
 df["__obcina_norm__"] = df["Občine"].apply(normalize_name)
 
-meta_cols = {"Občine", "Turistična regija", "__obcina_norm__"}
+meta_cols = {"Občine", "Turistična regija", "__obcina_norm__", "Vodilne destinacije", "Perspektivne destinacije", "Makro destinacije"}
 indicator_cols = [c for c in df.columns if c not in meta_cols]
 
 pop_candidates = [c for c in indicator_cols if "prebival" in c.lower() and "število" in c.lower()]
 pop_col = pop_candidates[0] if pop_candidates else None
 
-df_regions = df[df["Turistična regija"].notna()].copy()
-regions = sorted(df_regions["Turistična regija"].dropna().unique().tolist())
-regions_with_all = ["Vse regije"] + regions
+# Kandidati za poglede (zavihki)
+VIEW_CANDIDATES = [
+    ("Turistične regije", ["turisticna regija", "turisticne regije"]),
+    ("Vodilne destinacije", ["vodilna destinacija", "vodilne destinacije"]),
+    ("Makrodestinacije", ["makrodestinacija", "makrodestinacije", "makro destinacije"]),
+    ("Regijske destinacije", ["regijska destinacija", "regijske destinacije"]),
+    ("Perspektivne destinacije", ["perspektivna destinacija", "perspektivne destinacije"]),
+]
 
-num_df = df_regions.copy()
+views = []
 
-for c in indicator_cols:
-    num_df[c] = parse_numeric(num_df[c])
+for title, wanted in VIEW_CANDIDATES:
+    col = find_col(df, wanted)
+    if col is not None:
+        views.append((title, col))
 
-# GeoJSON občin
-if geojson_file is not None:
-    try:
-        geojson_obj = json.load(geojson_file)
-    except Exception:
-        geojson_obj = None
-else:
-    geojson_obj = try_load_geojson(Path(__file__).parent / GEOJSON_DEFAULT)
 
-name_prop = get_geojson_name_prop(geojson_obj) if geojson_obj else None
 
-# mapping občina -> regija (normalizirano)
-muni_to_region = {normalize_name(o): r for o, r in zip(df_regions["Občine"], df_regions["Turistična regija"])}
+tab_titles = [v[0] for v in views]
+tabs = st.tabs(tab_titles)
 
-# dropdowni
-top_left, top_right = st.columns([1.2, 1])
-with top_left:
-    selected_region = st.selectbox("Turistična regija", regions_with_all, index=0)
-with top_right:
-    map_indicator = st.selectbox("Indikator za zemljevid", indicator_cols, index=0 if indicator_cols else None)
+def render_view(view_title: str, group_col: str):
+    st.caption(f"**Pogled:** {view_title} (stolpec: `{group_col}`)")
 
-dash_inds = []
-if dashboard_mode:
-    default_inds = indicator_cols[:0] if len(indicator_cols) >= 4 else indicator_cols
-    dash_inds = st.multiselect("Indikatorji za dashboard (do 6)", indicator_cols, default=default_inds, max_selections=6, placeholder= "Izberi indikator")
+    meta = meta_cols | {group_col}
+    indicator_cols = [c for c in df.columns if c not in meta]
 
-# agregati regij
-agg_needed = [map_indicator] + [i for i in dash_inds if i != map_indicator]
-region_agg = compute_region_aggregates1(num_df, regions, agg_needed, AGG_RULES)
-region_to_value_map = dict(zip(region_agg["Turistična regija"], region_agg[map_indicator]))
-
-# regijski geojson (dissolve)
-regions_geojson = None
-if selected_region == "Vse regije" and geojson_obj and name_prop:
-    regions_geojson = build_region_geojson_from_municipalities(geojson_obj, name_prop, muni_to_region)
-
-# KPI / pregled
-if selected_region == "Vse regije":
-    st.subheader("Primerjava regij")
-    cols_to_show = ["Turistična regija"] + agg_needed
-    show_df = region_agg[cols_to_show].copy()
-    for c in cols_to_show[1:]:
-        show_df[c] = show_df[c].apply(lambda x: format_indicator_value_tables(c, x))
-        
-
-    show_df = show_df.sort_values(cols_to_show[1], ascending=False, na_position="last" )
-
-    st.dataframe(
-        show_df,
-        use_container_width=True,
-        height=260,
-        hide_index=True,
-        column_config = make_localized_column_config(show_df),
-        )
+    #Za regijo
+    df_regions = df[df[group_col].notna()].copy()
+    regions = sorted(df_regions[group_col].dropna().unique().tolist())
+    regions_with_all = ["Vse regije"] + regions
     
-else:
-    st.subheader("Povzetek izbrane regije")
+    num_df = df_regions.copy()
+    
+    for c in indicator_cols:
+        num_df[c] = parse_numeric(num_df[c])
+    
 
-    reg_df = num_df[num_df["Turistična regija"] == selected_region].copy()
-    reg_total = aggregate_indicator_with_rules(reg_df, map_indicator, AGG_RULES)
+    #za Celotno slovenijo
+    df_temp = df[df["Turistična regija"].notna()].copy()
 
-    # "Slovenija total" – smiselno le za seštevne indikatorje
-    sl_total = aggregate_indicator_with_rules(num_df, map_indicator, AGG_RULES)
+    df_slo_total = df_temp.copy()
 
-    share_si = np.nan
-    if (not is_rate_like(map_indicator)) and sl_total and not np.isnan(sl_total) and sl_total != 0:
-        share_si = (reg_total / sl_total) * 100.0
+    for c in indicator_cols:
+        df_slo_total[c] = parse_numeric(df_slo_total[c])
 
-    # KPI: prvi je indikator + delež SLO
-    left_kpi, right_kpi = st.columns([1.2, 1])
-    with left_kpi:
-        if not np.isnan(share_si):
-            st.metric(map_indicator, f"{format_si_number(reg_total)}", f"Delež Slovenije: {format_pct(share_si, 1)}")
-        else:
-            st.metric(map_indicator, f"{format_indicator_value_tables(map_indicator, reg_total)} %")
-    with right_kpi:
-        st.caption("Opomba: »Delež Slovenije« je prikazan za indikatorje, kjer se vrednosti seštevajo (ne za stopnje/indekse).")
 
-    # dodatni KPI-ji (dashboard)
-    if dashboard_mode and dash_inds:
-        kpi_cols = st.columns(min(6, len(dash_inds)))
-        for idx, ind in enumerate(dash_inds[:6]):
-
-            # vrednost regije
-            v_reg = float(region_agg.loc[region_agg["Turistična regija"] == selected_region, ind].iloc[0])
-
-            # total Slovenije za ta indikator
-            v_slo = aggregate_indicator_with_rules(num_df, ind, AGG_RULES)
-
-            # delež Slovenije (samo za seštevne indikatorje)
-            share = np.nan
-            if (not is_rate_like(ind)) and v_slo and not np.isnan(v_slo) and v_slo != 0:
-                share = (v_reg / v_slo) * 100.0
-
-            # prikaz
-            if not np.isnan(share):
-                kpi_cols[idx].metric(
-                    ind,
-                    format_si_number(v_reg),
-                    f"Delež Slovenije: {format_pct(share, 1)}"
-                )
-            else:
-                kpi_cols[idx].metric(ind, format_indicator_value_map(ind, v_reg))
-
-st.markdown("---")
-st.subheader("Zemljevid in razčlenitev")
-
-map_col, table_col = st.columns([2.2, 1.0], gap="large")
-
-with map_col:
-    if geojson_obj is None or name_prop is None:
-        st.info("Za zemljevid naloži občinski GeoJSON (npr. `si.json`).")
+    # GeoJSON občin
+    if geojson_file is not None:
+        try:
+            geojson_obj = json.load(geojson_file)
+        except Exception:
+            geojson_obj = None
     else:
-        if selected_region == "Vse regije":
-            if regions_geojson is None:
-                print(geojson_obj)
-                st.warning("Ne uspem sestaviti poligonov regij (dissolve). Prikazujem občine obarvane po regijski vrednosti.")
-                muni_region_val = {m: region_to_value_map.get(r, np.nan) for m, r in muni_to_region.items()}
-                render_map_municipalities(geojson_obj, name_prop, set(muni_to_region.keys()), muni_region_val,indicator_label=map_indicator, height=680)
-            else:
-                render_map_regions(regions_geojson, region_to_value_map,indicator_label=map_indicator, height=680)
-        else:
-            reg_df = num_df[num_df["Turistična regija"] == selected_region].copy()
-            muni_in_region = set(reg_df["__obcina_norm__"].tolist())
-            muni_to_value = {normalize_name(o): float(v) for o, v in zip(reg_df["Občine"], reg_df[map_indicator])}
-            render_map_municipalities(geojson_obj, name_prop, muni_in_region, muni_to_value,indicator_label=map_indicator, height=680)
+        geojson_obj = try_load_geojson(Path(__file__).parent / GEOJSON_DEFAULT)
 
-with table_col:
+    name_prop = get_geojson_name_prop(geojson_obj) if geojson_obj else None
+
+    # mapping občina -> regija (normalizirano)
+    muni_to_region = {normalize_name(o): r for o, r in zip(df_regions["Občine"], df_regions[group_col])}
+
+    # dropdowni
+    top_left, top_right = st.columns([1.2, 1])
+    with top_left:
+        selected_region = st.selectbox(group_col, regions_with_all, index=0, key=f"sel_group_{group_col}")
+    with top_right:
+        map_indicator = st.selectbox("Indikator za zemljevid", indicator_cols, index=0, key=f"sel_ind_{group_col}")
+
+    dash_inds = []
+    if dashboard_mode:
+        default_inds = indicator_cols[:0] if len(indicator_cols) >= 4 else indicator_cols
+        dash_inds = st.multiselect("Indikatorji za dashboard (do 6)", indicator_cols, default=default_inds, max_selections=6, placeholder= "Izberi indikator", key=f"dash_{group_col}")
+
+    # agregati regij
+    agg_needed = [map_indicator] + [i for i in dash_inds if i != map_indicator]
+    region_agg = compute_region_aggregates1(num_df, regions, agg_needed, AGG_RULES, group_col=group_col)
+    region_to_value_map = dict(zip(region_agg[group_col], region_agg[map_indicator]))
+
+    # regijski geojson (dissolve)
+    regions_geojson = None
+    if selected_region == "Vse regije" and geojson_obj and name_prop:
+        regions_geojson = build_region_geojson_from_municipalities(geojson_obj, name_prop, muni_to_region, group_col=group_col)
+
+    # KPI / pregled
     if selected_region == "Vse regije":
-        st.markdown("**Tabela regij (izbran indikator)**")
-        t = region_agg[["Turistična regija", map_indicator]].copy()
-        t = t.sort_values(map_indicator, ascending=False, na_position="last")
-        t[map_indicator] = t[map_indicator].apply(lambda x: format_indicator_value_tables(map_indicator, x))
-        t = t.rename(columns={map_indicator: "Vrednost"})
+        st.subheader("Primerjava regij")
+        cols_to_show = [group_col] + agg_needed
+        show_df = region_agg[cols_to_show].copy()
+        for c in cols_to_show[1:]:
+            show_df[c] = show_df[c].apply(lambda x: format_indicator_value_tables(c, x))
+            
+
+        show_df = show_df.sort_values(cols_to_show[1], ascending=False, na_position="last" )
+
         st.dataframe(
-            t,
+            show_df,
             use_container_width=True,
-            height=680,
+            height=260,
             hide_index=True,
-            column_config = make_localized_column_config(t),
+            column_config = make_localized_column_config(show_df),
             )
+        
     else:
-        st.markdown("**Tabela občin (znotraj regije)**")
-        reg_df = num_df[num_df["Turistična regija"] == selected_region].copy()
+        st.subheader("Povzetek izbrane regije")
+        
+        reg_df = num_df[num_df[group_col] == selected_region].copy()
         reg_total = aggregate_indicator_with_rules(reg_df, map_indicator, AGG_RULES)
 
-        tbl = pd.DataFrame({
-            "Občina": reg_df["Občine"].astype(str),
-            "Vrednost": reg_df[map_indicator].astype(float).apply(lambda x: format_indicator_value_tables(map_indicator, x))
-        })
-        if (reg_total and not np.isnan(reg_total) and reg_total != 0 and not is_rate_like(map_indicator)):
-            tbl["Delež v regiji (%)"] = round(((tbl["Vrednost"] / reg_total) * 100.0), 1)
+        # "Slovenija total" – smiselno le za seštevne indikatorje
+        sl_total = aggregate_indicator_with_rules(df_slo_total, map_indicator, AGG_RULES)
+        
+        share_si = np.nan
+        if (not is_rate_like(map_indicator)) and sl_total and not np.isnan(sl_total) and sl_total != 0:
+            share_si = (reg_total / sl_total) * 100.0
+
+        # KPI: prvi je indikator + delež SLO
+        left_kpi, right_kpi = st.columns([1.2, 1])
+        with left_kpi:
+            if not np.isnan(share_si): 
+                st.metric(map_indicator, f"{format_si_number(reg_total)}", f"Delež Slovenije: {format_pct(share_si, 1)}")
+            else:
+                st.metric(map_indicator, f"{format_indicator_value_tables(map_indicator, reg_total)} %")
+        with right_kpi:
+            st.caption("Opomba: »Delež Slovenije« je prikazan za indikatorje, kjer se vrednosti seštevajo (ne za stopnje/indekse).")
+
+        # dodatni KPI-ji (dashboard)
+        if dashboard_mode and dash_inds:
+            kpi_cols = st.columns(min(6, len(dash_inds)))
+            for idx, ind in enumerate(dash_inds[:6]):
+
+                # vrednost regije
+                v_reg = float(region_agg.loc[region_agg[group_col] == selected_region, ind].iloc[0])
+
+                # total Slovenije za ta indikator
+                v_slo = aggregate_indicator_with_rules(df_slo_total, ind, AGG_RULES)
+
+                # delež Slovenije (samo za seštevne indikatorje)
+                share = np.nan
+                if (not is_rate_like(ind)) and v_slo and not np.isnan(v_slo) and v_slo != 0:
+                    share = (v_reg / v_slo) * 100.0
+
+                # prikaz
+                if not np.isnan(share):
+                    kpi_cols[idx].metric(
+                        ind,
+                        format_si_number(v_reg),
+                        f"Delež Slovenije: {format_pct(share, 1)}"
+                    )
+                else:
+                    kpi_cols[idx].metric(ind, format_indicator_value_map(ind, v_reg))
+
+    st.markdown("---")
+    st.subheader("Zemljevid in razčlenitev")
+
+    map_col, table_col = st.columns([2.2, 1.0], gap="large")
+
+    with map_col:
+        if geojson_obj is None or name_prop is None:
+            st.info("Za zemljevid naloži občinski GeoJSON (npr. `si.json`).")
         else:
-            pass
+            if selected_region == "Vse regije":
+                if regions_geojson is None:
 
-        tbl = tbl.sort_values("Vrednost", ascending=False, na_position="last")
+                    st.warning("Ne uspem sestaviti poligonov regij (dissolve). Prikazujem občine obarvane po regijski vrednosti.")
+                    muni_region_val = {m: region_to_value_map.get(r, np.nan) for m, r in muni_to_region.items()}
+                    render_map_municipalities(geojson_obj, name_prop, set(muni_to_region.keys()), muni_region_val,indicator_label=map_indicator, height=680)
+                else:
+                    render_map_regions(regions_geojson, region_to_value_map,indicator_label=map_indicator,group_col=group_col, height=680)
+            else:
+                reg_df = num_df[num_df[group_col] == selected_region].copy()
+                muni_in_region = set(reg_df["__obcina_norm__"].tolist())
+                muni_to_value = {normalize_name(o): float(v) for o, v in zip(reg_df["Občine"], reg_df[map_indicator])}
+                render_map_municipalities(geojson_obj, name_prop, muni_in_region, muni_to_value,indicator_label=map_indicator, height=680)
 
-        st.dataframe(
-            tbl,
-            use_container_width=True,
-            height=680,
-            hide_index=True,
-            column_config = make_localized_column_config(tbl),
-            )
-    st.caption("Opomba: »Delež v regiji (%)« je prikazan za indikatorje, kjer se vrednosti seštevajo (ne za stopnje/indekse).")
+    with table_col:
+        if selected_region == "Vse regije":
+            st.markdown("**Tabela regij (izbran indikator)**")
+            t = region_agg[[group_col, map_indicator]].copy()
+            t = t.sort_values(map_indicator, ascending=False, na_position="last")
+            t[map_indicator] = t[map_indicator].apply(lambda x: format_indicator_value_tables(map_indicator, x))
+            t = t.rename(columns={map_indicator: "Vrednost"})
+            st.dataframe(
+                t,
+                use_container_width=True,
+                height=680,
+                hide_index=True,
+                column_config = make_localized_column_config(t),
+                )
+        else:
+            st.markdown("**Tabela občin (znotraj regije)**")
+            reg_df = num_df[num_df[group_col] == selected_region].copy()
+            reg_total = aggregate_indicator_with_rules(reg_df, map_indicator, AGG_RULES)
+
+            tbl = pd.DataFrame({
+                "Občina": reg_df["Občine"].astype(str),
+                "Vrednost": reg_df[map_indicator].astype(float).apply(lambda x: format_indicator_value_tables(map_indicator, x))
+            })
+            if (reg_total and not np.isnan(reg_total) and reg_total != 0 and not is_rate_like(map_indicator)):
+                tbl["Delež v regiji (%)"] = round(((tbl["Vrednost"] / reg_total) * 100.0), 1)
+            else:
+                pass
+
+            tbl = tbl.sort_values("Vrednost", ascending=False, na_position="last")
+
+            st.dataframe(
+                tbl,
+                use_container_width=True,
+                height=680,
+                hide_index=True,
+                column_config = make_localized_column_config(tbl),
+                )
+        st.caption("Opomba: »Delež v regiji (%)« je prikazan za indikatorje, kjer se vrednosti seštevajo (ne za stopnje/indekse).")
+
+for (tab, (title, group_col)) in zip(tabs, views):
+    with tab:
+        render_view(title, group_col)
 
 st.caption("Skupni pogled: Skupni podatki za posamezne regije. Posamezna regija: meje občin ter deleži znotraj regije. Dodan je tudi delež Občine glede na Regijo (kjer je smiselno).")
