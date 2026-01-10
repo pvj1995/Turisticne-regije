@@ -829,6 +829,16 @@ def render_view(view_title: str, group_col: str):
             st.markdown("**Tabela občin (znotraj regije)**")
             reg_df = num_df[num_df[group_col] == selected_region].copy()
             reg_total = aggregate_indicator_with_rules(reg_df, map_indicator, AGG_RULES)
+            
+            cfg_df = pd.DataFrame({
+                "Občina": reg_df["Občine"].astype(str),
+                map_indicator: reg_df[map_indicator].astype(float).apply(lambda x: format_indicator_value_tables(map_indicator, x))
+            })
+            
+            cfg = make_localized_column_config(cfg_df)
+            
+            old_key= next(iter(cfg))
+            cfg["Vrednost"] = cfg.pop(old_key)
 
             tbl = pd.DataFrame({
                 "Občina": reg_df["Občine"].astype(str),
