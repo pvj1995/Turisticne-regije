@@ -37,6 +37,7 @@ AGG_RULES = {
     'Prenočitve turistov SKUPAJ': ("sum", None),
     'Prenočitve turistov Domači': ("sum", None),
     'Prenočitve turistov\tTuji': ("sum", None),
+    'Prenočitve - povprečno število prenočitev na mesec': ("sum", None),
     'Delež tujih prenočitev': ("wmean", 'Prenočitve turistov SKUPAJ'),
     'Prihodi turistov SKUPAJ': ("sum", None),
     'Prihodi turistov Domači': ("sum", None),
@@ -120,7 +121,7 @@ AGG_RULES = {
     "Štev.dijakov in študentov višjih strok. in visokošolsk.progr./1000 preb.": ("wmean", "Število prebivalcev (H2/2024)"),
     "Število vseh stanovanj": ("sum", None),
     "Delež naseljenih stanovanj": ("wmean", "Število vseh stanovanj"),
-    "GINI Indeks - sezonskost prenočitev": ("wmean", "Prenočitve turistov SKUPAJ"),
+    "GINI Indeks - sezonskost prenočitev": ("wmean", 'Prenočitve - povprečno število prenočitev na mesec'),
     "Delež vseh prenočitev - Domači trg": ("wmean", "Prenočitve turistov SKUPAJ"),
     "Delež vseh prenočitev - DACH trgi": ("wmean", "Prenočitve turistov SKUPAJ"),
     "Delež vseh prenočitev - Italijanski trg": ("wmean", "Prenočitve turistov SKUPAJ"),
@@ -243,6 +244,9 @@ def format_indicator_value_map(indicator: str, x):
     # deleži/indeksi so v podatkih v obliki 0.45 -> prikaz 45 %
     if is_percent_like(indicator):
         return format_pct(float(x) * 100.0, 1)
+    #GINI indeks izjema
+    if "GINI" in indicator:
+        return round(x,2)
     # vse ostalo ostane normalno število
     return format_si_number(x)
 
@@ -877,7 +881,7 @@ render_view(title, group_col)
 
 st.image("footer_logo.jpg", width= 200)
 
-st.caption("Viri podatkov: SURS, AJPES, Narodna Banka Slovenije, Slovenska Turistična Organizacija, Lastna obdelava in izračuni Hosting Management & Consulting d.o.o. December 2025")
-st.caption("Naročnik projekta (2025), Ministrstvo za gospodarstvo turizem in šport RS")
+st.caption("Viri podatkov: SURS, AJPES, Narodna Banka Slovenije, Slovenska Turistična Organizacija, Lastna obdelava, izračuni in dodatne ocene manjkajočih podatkov - Hosting Management & Consulting d.o.o.")
+st.caption("Naročnik projekta: Ministrstvo za gospodarstvo turizem in šport RS")
 st.caption("Izvajalec projekta: Hosting Management & Consulting d.o.o., December 2025")
 st.markdown("---")
