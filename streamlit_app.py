@@ -856,7 +856,7 @@ def render_view(view_title: str, group_col: str):
                 use_container_width=True,
                 height=680,
                 hide_index=True,
-                column_config = make_localized_column_config(tbl),
+                column_config = cfg,
                 )
         st.caption("Opomba: »Delež v regiji (%)« je prikazan za indikatorje, kjer se vrednosti seštevajo (ne za stopnje/indekse).")
 
