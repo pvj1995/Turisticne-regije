@@ -438,12 +438,7 @@ def _palette(val, vmin, vmax):
     idx = sum(q > b for b in bins)
     return colors[idx]
 
-# def make_localized_column_config(df: pd.DataFrame):
-#     cfg = {}
-#     for c in df.columns:
-#         if pd.api.types.is_numeric_dtype(df[c]):
-#             cfg[c] = st.column_config.NumberColumn(format="localized")
-#     return cfg
+
 
 def make_localized_column_config(df: pd.DataFrame):
     cfg = {}
@@ -599,8 +594,22 @@ def load_geojson_from_upload_or_file(uploaded, default_path: Path):
 # ---------------------------
 # UI
 # ---------------------------
-st.set_page_config(page_title="Turistične regije – interaktivni pregled", layout="wide", initial_sidebar_state="collapsed")
-st.title("Turistične regije Slovenije – interaktivni pregled")
+st.set_page_config(page_title="Upravljanje turističnih destinacij Slovenije – ključni podatki in kazalniki", layout="wide", initial_sidebar_state="collapsed")
+
+col_left, col_center, col_right = st.columns([1, 6, 3])
+
+with col_left:
+    st.image("top _left_logo.jpg")
+
+with col_center:
+    ""
+
+with col_right:
+    st.image("Top_right_logo.jpg", width= 350)
+
+st.title("Upravljanje turističnih destinacij Slovenije – ključni podatki in kazalniki")
+
+st.markdown("***Podatki se nanašajo na leto 2024***")
 
 with st.sidebar:
     st.header("Nastavitve")
@@ -661,7 +670,7 @@ selected_view_label = st.selectbox("Pogled", view_labels, index=0)
 
 
 def render_view(view_title: str, group_col: str):
-    st.caption(f"**Pogled:** {view_title} (stolpec: `{group_col}`)")
+    st.caption(f"**Pogled:** {view_title}")
 
     meta = meta_cols | {group_col}
     indicator_cols = [c for c in df.columns if c not in meta]
@@ -669,7 +678,7 @@ def render_view(view_title: str, group_col: str):
     #Za regijo
     df_regions = df[df[group_col].notna()].copy()
     regions = sorted(df_regions[group_col].dropna().unique().tolist())
-    regions_with_all = ["Vse regije"] + regions
+    regions_with_all = ["Vsa območja"] + regions
 
     num_df = df_regions.copy()
     
@@ -710,12 +719,12 @@ def render_view(view_title: str, group_col: str):
 
     # regijski geojson (dissolve)
     regions_geojson = None
-    if selected_region == "Vse regije" and geojson_obj and name_prop:
+    if selected_region == "Vsa območja" and geojson_obj and name_prop:
         regions_geojson = build_region_geojson_from_municipalities(geojson_obj, name_prop, muni_to_region, group_col=group_col)
 
     # KPI / pregled
-    if selected_region == "Vse regije":
-        st.subheader("Primerjava regij")
+    if selected_region == "Vsa območja":
+        st.subheader("Primerjava območij")
         cols_to_show = [group_col] + agg_needed
         show_df = region_agg[cols_to_show].copy()
         for c in cols_to_show[1:]:
@@ -751,7 +760,7 @@ def render_view(view_title: str, group_col: str):
             if not np.isnan(share_si): 
                 st.metric(map_indicator, f"{format_si_number(reg_total)}", f"Delež Slovenije: {format_pct(share_si, 1)}")
             else:
-                st.metric(map_indicator, f"{format_indicator_value_tables(map_indicator, reg_total)} %")
+                st.metric(map_indicator, f"{format_indicator_value_map(map_indicator, reg_total)}")
         with right_kpi:
             st.caption("Opomba: »Delež Slovenije« je prikazan za indikatorje, kjer se vrednosti seštevajo (ne za stopnje/indekse).")
 
@@ -783,6 +792,7 @@ def render_view(view_title: str, group_col: str):
 
     st.markdown("---")
     st.subheader("Zemljevid in razčlenitev")
+    st.caption("Skupni pogled: Skupni podatki za posamezna območja. Posamezno območje: meje občin ter deleži znotraj območja. Dodan je tudi delež Občine glede na območje (kjer je smiselno).")
 
     map_col, table_col = st.columns([2.2, 1.0], gap="large")
 
@@ -790,23 +800,23 @@ def render_view(view_title: str, group_col: str):
         if geojson_obj is None or name_prop is None:
             st.info("Za zemljevid naloži občinski GeoJSON (npr. `si.json`).")
         else:
-            if selected_region == "Vse regije":
+            if selected_region == "Vsa območja":
                 if regions_geojson is None:
 
                     st.warning("Ne uspem sestaviti poligonov regij (dissolve). Prikazujem občine obarvane po regijski vrednosti.")
                     muni_region_val = {m: region_to_value_map.get(r, np.nan) for m, r in muni_to_region.items()}
                     render_map_municipalities(geojson_obj, name_prop, set(muni_to_region.keys()), muni_region_val,indicator_label=map_indicator, height=680)
                 else:
-                    render_map_regions(regions_geojson, region_to_value_map,indicator_label=map_indicator,group_col=group_col, height=680)
+                    render_map_regions(regions_geojson, region_to_value_map,indicator_label=map_indicator,group_col=group_col, height=780)
             else:
                 reg_df = num_df[num_df[group_col] == selected_region].copy()
                 muni_in_region = set(reg_df["__obcina_norm__"].tolist())
                 muni_to_value = {normalize_name(o): float(v) for o, v in zip(reg_df["Občine"], reg_df[map_indicator])}
-                render_map_municipalities(geojson_obj, name_prop, muni_in_region, muni_to_value,indicator_label=map_indicator, height=680)
+                render_map_municipalities(geojson_obj, name_prop, muni_in_region, muni_to_value,indicator_label=map_indicator, height=780)
 
     with table_col:
-        if selected_region == "Vse regije":
-            st.markdown("**Tabela regij (izbran indikator)**")
+        if selected_region == "Vsa območja":
+            st.markdown(f"**Tabela območij** \n \n **:blue[{map_indicator}]**")
             t = region_agg[[group_col, map_indicator]].copy()
             t = t.sort_values(map_indicator, ascending=False, na_position="last")
             t[map_indicator] = t[map_indicator].apply(lambda x: format_indicator_value_tables(map_indicator, x))
@@ -826,7 +836,7 @@ def render_view(view_title: str, group_col: str):
                 column_config = cfg,
                 )
         else:
-            st.markdown("**Tabela občin (znotraj regije)**")
+            st.markdown(f"**Tabela občin znotraj območja** \n \n **:blue[{map_indicator}]**")
             reg_df = num_df[num_df[group_col] == selected_region].copy()
             reg_total = aggregate_indicator_with_rules(reg_df, map_indicator, AGG_RULES)
             
@@ -865,4 +875,9 @@ def render_view(view_title: str, group_col: str):
 title, group_col = next(v for v in views if v[0] == selected_view_label)
 render_view(title, group_col)
 
-st.caption("Skupni pogled: Skupni podatki za posamezne regije. Posamezna regija: meje občin ter deleži znotraj regije. Dodan je tudi delež Občine glede na Regijo (kjer je smiselno).")
+st.image("footer_logo.jpg", width= 200)
+
+st.caption("Viri podatkov: SURS, AJPES, Narodna Banka Slovenije, Slovenska Turistična Organizacija, Lastna obdelava in izračuni Hosting Management & Consulting d.o.o. December 2025")
+st.caption("Naročnik projekta (2025), Ministrstvo za gospodarstvo turizem in šport RS")
+st.caption("Izvajalec projekta: Hosting Management & Consulting d.o.o., December 2025")
+st.markdown("---")
