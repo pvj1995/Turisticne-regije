@@ -233,9 +233,9 @@ def format_pct(x, decimals=1):
     
 def format_indicator_value_tables(indicator: str, x):
     # deleži/indeksi so v podatkih v obliki 0.45 -> prikaz 45 %
-    # if is_percent_like(indicator):
-    #     num = x * 100
-    #     return round(num, 1)
+    if is_percent_like(indicator):
+        
+        return round(x, 3)
     # vse ostalo ostane normalno število
     return round(x, 2)
 
