@@ -157,9 +157,21 @@ def is_rate_like(col: str) -> bool:
     c = col.lower()
     keywords = [
         "%", "delež", "/1000", "povpre", "indeks", "stopnja", "na 1", "na 1000", "na preb",
-        "kg/preb", "€/preb", "na km2", "gostota"
+        "kg/preb", "€/preb", "na km2", "gostota", "marža", "povprečna letna zasedenost", "cenjena povp", "donosnost", "dobičkovnost"
     ]
     return any(k in c for k in keywords)
+
+def is_percent_like(col: str) -> bool:
+    c = col.lower()
+
+    # stvari, ki so *deleži/indeksi* 
+    positive = ["delež", "marža", "%", "stopnja", "povprečna letna zasedenost", "ocenjena povp", "donosnost", "dobičkovnost"]
+
+    # stvari, ki so rate-i in jih *ne* želiš kot %
+    negative = ["/1000", "na 1000", "na 1", "na preb", "kg/preb", "€/preb", "na km2", "gostota"]
+
+    return any(k in c for k in positive) and not any(k in c for k in negative)
+
 
 def parse_numeric(series: pd.Series) -> pd.Series:
     s = series.astype(str).str.strip()
@@ -209,6 +221,21 @@ def format_pct(x, decimals=1):
         return format_si_number(float(x), decimals) + " %"
     except Exception:
         return "—"
+    
+def format_indicator_value_tables(indicator: str, x):
+    # deleži/indeksi so v podatkih v obliki 0.45 -> prikaz 45 %
+    if is_percent_like(indicator):
+        num = x * 100
+        return round(num, 1)
+    # vse ostalo ostane normalno število
+    return round(x, 2)
+
+def format_indicator_value_map(indicator: str, x):
+    # deleži/indeksi so v podatkih v obliki 0.45 -> prikaz 45 %
+    if is_percent_like(indicator):
+        return format_pct(float(x) * 100.0, 1)
+    # vse ostalo ostane normalno število
+    return format_si_number(x)
 
 def strip_diacritics(s: str) -> str:
     return (s.replace("č","c").replace("š","s").replace("ž","z")
@@ -254,6 +281,8 @@ def try_load_geojson(path: Path):
             return json.load(f)
     except Exception:
         return None
+
+
 
 def aggregate_indicator_with_rules(df: pd.DataFrame, indicator: str, agg_rules: dict):
     if "Celotni prihodki v nastan. dejav. na prenočitev" in indicator :
@@ -332,6 +361,8 @@ def aggregate_indicator_with_rules(df: pd.DataFrame, indicator: str, agg_rules: 
     
     return float(values.sum(skipna = True))
 
+
+
 def compute_region_aggregates1(num_df, regions, indicator_cols, agg_rules):
     out = pd.DataFrame({"Turistična regija" : regions})
 
@@ -409,7 +440,7 @@ def render_map_regions(regions_geojson: dict, region_to_value: dict, indicator_l
         props = feat.get("properties", {}) or {}
         reg = props.get("Turistična regija")
         val = region_to_value.get(reg, np.nan)
-        props["_vrednost_fmt"] = format_si_number(val)
+        props["_vrednost_fmt"] = format_indicator_value_map(indicator_label,val)
         feat["properties"] = props
 
     m = folium.Map(location=[45.65, 14.82], zoom_start=8, tiles="cartodbpositron", min_zoom=8, max_bounds=True)
@@ -475,12 +506,12 @@ def render_map_municipalities(
         if nm in muni_in_region:
             val = muni_to_value.get(nm, np.nan)
             props["_indikator"] = indicator_label
-            props["_vrednost_fmt"] = format_si_number(val)
+            props["_vrednost_fmt"] = format_indicator_value_map(indicator_label,val)
             feat["properties"] = props
             feats_in.append(feat)
         else:
             feats_out.append(feat)
-
+    
     gj_in = {"type": "FeatureCollection", "features": feats_in}
     gj_out = {"type": "FeatureCollection", "features": feats_out}
 
@@ -616,8 +647,11 @@ if selected_region == "Vse regije":
     cols_to_show = ["Turistična regija"] + agg_needed
     show_df = region_agg[cols_to_show].copy()
     for c in cols_to_show[1:]:
-        show_df[c] = show_df[c].apply(lambda x: round(x, 2))
-        #show_df[c] = show_df[c].apply(lambda x: format_si_number(x))
+        show_df[c] = show_df[c].apply(lambda x: format_indicator_value_tables(c, x))
+        
+
+    show_df = show_df.sort_values(cols_to_show[1], ascending=False, na_position="last" )
+
     st.dataframe(
         show_df,
         use_container_width=True,
@@ -645,7 +679,7 @@ else:
         if not np.isnan(share_si):
             st.metric(map_indicator, f"{format_si_number(reg_total)}", f"Delež Slovenije: {format_pct(share_si, 1)}")
         else:
-            st.metric(map_indicator, f"{format_si_number(reg_total)}")
+            st.metric(map_indicator, f"{format_indicator_value_tables(map_indicator, reg_total)} %")
     with right_kpi:
         st.caption("Opomba: »Delež Slovenije« je prikazan za indikatorje, kjer se vrednosti seštevajo (ne za stopnje/indekse).")
 
@@ -673,7 +707,7 @@ else:
                     f"Delež Slovenije: {format_pct(share, 1)}"
                 )
             else:
-                kpi_cols[idx].metric(ind, format_si_number(v_reg))
+                kpi_cols[idx].metric(ind, format_indicator_value_map(ind, v_reg))
 
 st.markdown("---")
 st.subheader("Zemljevid in razčlenitev")
@@ -703,8 +737,7 @@ with table_col:
         st.markdown("**Tabela regij (izbran indikator)**")
         t = region_agg[["Turistična regija", map_indicator]].copy()
         t = t.sort_values(map_indicator, ascending=False, na_position="last")
-        t[map_indicator] = t[map_indicator].apply(lambda x: round(x, 2))
-        #t[map_indicator] = t[map_indicator].apply(lambda x: format_si_number(x))
+        t[map_indicator] = t[map_indicator].apply(lambda x: format_indicator_value_tables(map_indicator, x))
         t = t.rename(columns={map_indicator: "Vrednost"})
         st.dataframe(
             t,
@@ -720,16 +753,15 @@ with table_col:
 
         tbl = pd.DataFrame({
             "Občina": reg_df["Občine"].astype(str),
-            "Vrednost": reg_df[map_indicator].astype(float)
+            "Vrednost": reg_df[map_indicator].astype(float).apply(lambda x: format_indicator_value_tables(map_indicator, x))
         })
         if (reg_total and not np.isnan(reg_total) and reg_total != 0 and not is_rate_like(map_indicator)):
-            tbl["Delež v regiji (%)"] = round(((tbl["Vrednost"] / reg_total) * 100.0), 2)
+            tbl["Delež v regiji (%)"] = round(((tbl["Vrednost"] / reg_total) * 100.0), 1)
         else:
-            tbl["Delež v regiji (%)"] = np.nan
+            pass
 
         tbl = tbl.sort_values("Vrednost", ascending=False, na_position="last")
-        #tbl["Vrednost"] = tbl["Vrednost"].apply(lambda x: format_si_number(x))
-        #tbl["Delež v regiji (%)"] = tbl["Delež v regiji (%)"].apply(lambda x: format_si_number(x, 1))
+
         st.dataframe(
             tbl,
             use_container_width=True,
