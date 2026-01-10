@@ -268,6 +268,7 @@ def find_col(df: pd.DataFrame, wanted: list[str]) -> str | None:
                 return orig
     return None
 
+@st.cache_data(show_spinner=False)
 def load_excel(path_or_buffer) -> pd.DataFrame:
     df0 = pd.read_excel(path_or_buffer, header=0)
     c_ob = find_col(df0, ["obcine", "obcina"])
@@ -292,7 +293,7 @@ def try_load_geojson(path: Path):
         return None
 
 
-
+@st.cache_data(show_spinner=False)
 def aggregate_indicator_with_rules(df: pd.DataFrame, indicator: str, agg_rules: dict):
     if "Celotni prihodki v nastan. dejav. na prenočitev" in indicator :
 
@@ -371,7 +372,7 @@ def aggregate_indicator_with_rules(df: pd.DataFrame, indicator: str, agg_rules: 
     return float(values.sum(skipna = True))
 
 
-
+@st.cache_data(show_spinner=False)
 def compute_region_aggregates1(num_df, regions, indicator_cols, agg_rules, group_col:str):
     out = pd.DataFrame({group_col : regions})
 
@@ -484,6 +485,7 @@ def render_map_regions(regions_geojson: dict, region_to_value: dict, indicator_l
     m.fit_bounds(bounds, padding= (40, 40), max_zoom=8)
 
     st.components.v1.html(m._repr_html_(), height=height, scrolling=False)
+
 
 def render_map_municipalities(
     geojson_obj,
