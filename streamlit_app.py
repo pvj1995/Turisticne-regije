@@ -757,10 +757,15 @@ def render_view(view_title: str, group_col: str):
             share_si = (reg_total / sl_total) * 100.0
 
         # KPI: prvi je indikator + delež SLO
+        if "PDB" in map_indicator or "turizma" in map_indicator:
+            kpi_text = "Indeks Slovenskega povprečja"
+        else:
+            kpi_text = "Delež Slovenije"
+
         left_kpi, right_kpi = st.columns([1.2, 1])
         with left_kpi:
             if not np.isnan(share_si): 
-                st.metric(map_indicator, f"{format_si_number(reg_total)}", f"Delež Slovenije: {format_pct(share_si, 1)}")
+                st.metric(map_indicator, f"{format_si_number(reg_total)}", f"{kpi_text}: {format_pct(share_si, 1)}")
             else:
                 st.metric(map_indicator, f"{format_indicator_value_map(map_indicator, reg_total)}")
         with right_kpi:
