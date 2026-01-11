@@ -22,7 +22,18 @@ try:
 except Exception:
     gpd = None
 
+st.sidebar.write("geopandas:", "OK" if gpd is not None else "MISSING")
+st.sidebar.write("folium:", "OK" if folium is not None else "MISSING")
 
+import shapely
+import geopandas
+import pyproj
+st.sidebar.write("versions:", {
+    "streamlit": st.__version__,
+    "geopandas": geopandas.__version__,
+    "shapely": shapely.__version__,
+    "pyproj": pyproj.__version__,
+})
 
 
 DATA_XLSX_DEFAULT = "Skupna tabela občine.xlsx"
