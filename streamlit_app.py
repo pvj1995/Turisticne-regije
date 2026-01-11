@@ -11,6 +11,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import streamlit as st
+import plotly.express as px
 
 try:
     import folium
@@ -387,6 +388,10 @@ def compute_region_aggregates1(num_df, regions, indicator_cols, agg_rules, group
     
     return out
 
+def shorten_label(s: str, max_len: int = 22) -> str:
+    s = str(s).strip()
+    return s if len(s) <= max_len else s[: max_len - 1] + "…"
+
 def get_geojson_name_prop(geojson_obj, candidates=("name","NAME","Občina","OBČINA")):
     sample_props = None
     for feat in geojson_obj.get("features", [])[:15]:
@@ -650,6 +655,21 @@ geojson_obj = load_geojson_from_upload_or_file(
 )
 name_prop = get_geojson_name_prop(geojson_obj) if geojson_obj else None
 
+MARKET_PREFIX = "Delež vseh prenočitev - "
+market_cols = [c for c in df.columns if str(c).startswith(MARKET_PREFIX)]
+market_labels = [c.replace(MARKET_PREFIX, "").strip() for c in market_cols]
+
+MARKET_COLOR_MAP = {
+    "Domači trg": "#1f77b4",
+    "DACH trgi": "#ff7f0e",
+    "Italijanski trg": "#2ca02c",
+    "Vzh.evropski trgi (PL,CZ,HU,SK,LIT,LTV,EST,RU,UKR)": "#d62728",  
+    "Drugi zah.in sev. evropski trgi (ES,P, F,Benelux, Skandinavske države)": "#9467bd",  
+    "Prekomorski trgi (ZDA, VB, CAN, AU, Azija)": "#17becf",  
+    "Trgi JV Evrope": "#bcbd22",  
+    "Vsi drugi tuji trgi": "#7f7f7f",  
+}
+
 # Kandidati za poglede (zavihki)
 VIEW_CANDIDATES = [
     ("Turistične regije", ["turisticna regija", "turisticne regije"]),
@@ -666,8 +686,6 @@ for title, wanted in VIEW_CANDIDATES:
     if col is not None:
         views.append((title, col))
 
-view_labels = [v[0] for v in views]
-selected_view_label = st.selectbox("Pogled", view_labels, index=0)
 
 
 
@@ -676,6 +694,7 @@ def render_view(view_title: str, group_col: str):
 
     meta = meta_cols | {group_col}
     indicator_cols = [c for c in df.columns if c not in meta]
+
 
     #Za regijo
     df_regions = df[df[group_col].notna()].copy()
@@ -877,10 +896,211 @@ def render_view(view_title: str, group_col: str):
                 )
         st.caption("Opomba: »Delež v regiji (%)« je prikazan za indikatorje, kjer se vrednosti seštevajo (ne za stopnje/indekse).")
 
+def render_market_structure(view_title: str, group_col: str, market_cols: list[str], market_labels: list[str]):
+    st.caption(f"**Pogled:** {view_title}")
+    st.subheader("Struktura prenočitev po trgih")
+
+    if not market_cols:
+        st.warning("V Excelu ne najdem stolpcev, ki se začnejo z: 'Delež vseh prenočitev - '.")
+        return
+
+    # DF za izbrani pogled (samo vrstice, kjer je group_col definiran)
+    df_groups = df[df[group_col].notna()].copy()
+
+    # numeric parsing (potrebno za izračune)
+    num_df = df_groups.copy()
+    base_weight_col = "Prenočitve turistov SKUPAJ"
+    cols_needed = [base_weight_col] + market_cols
+    for c in cols_needed:
+        if c in num_df.columns:
+            num_df[c] = parse_numeric(num_df[c])
+
+    groups = sorted(num_df[group_col].dropna().unique().tolist())
+    if not groups:
+        st.warning("Ne najdem nobenih območij za izbran pogled.")
+        return
+
+    # UI: izberi območje (ne priporočam "vsa območja" za torto, raje ena regija)
+    selected_group = st.selectbox(f"Izberi območje ({group_col})", groups, index=0, key=f"trgi_sel_{group_col}")
+
+    mode = st.radio(
+        "Prikaz",
+        ["Celotno območje", "Občine znotraj območja"],
+        horizontal=True,
+        key=f"trgi_mode_{group_col}"
+    )
+
+    sub = num_df[num_df[group_col] == selected_group].copy()
+    if sub.empty:
+        st.info("Ni podatkov za izbrano območje.")
+        return
+
+    # ---- Celotno območje: utežena struktura po prenočitvah
+    # Region share = sum(share_i * total_i) / sum(total_i)
+    total_w = sub[base_weight_col].astype(float)
+    denom = float(np.nansum(total_w.values)) if base_weight_col in sub.columns else np.nan
+
+    if denom and not np.isnan(denom) and denom > 0:
+        vals = {}
+        for col, lab in zip(market_cols, market_labels):
+            s = sub[col].astype(float)
+            mask = (~s.isna()) & (~total_w.isna()) & (total_w > 0)
+            if mask.any():
+                vals[lab] = float(np.nansum((s[mask] * total_w[mask]).values) / np.nansum(total_w[mask].values))
+            else:
+                vals[lab] = np.nan
+        struct = pd.DataFrame({"Trg": list(vals.keys()), "Delež": list(vals.values())}).dropna()
+    else:
+        st.warning("Manjkajo prenočitve SKUPAJ (utež) ali so 0, zato strukture ne morem izračunati.")
+        return
+
+    # normalizacija, če seštevek ni ~1 (v praksi se včasih zgodi zaradi zaokroževanja ali manjkajočih trgov)
+    ssum = float(struct["Delež"].sum()) if not struct.empty else 0.0
+    if ssum > 0:
+        struct["Delež_norm"] = struct["Delež"] / ssum
+    else:
+        struct["Delež_norm"] = np.nan
+
+    if mode == "Celotno območje":
+        st.markdown(f"### {selected_group}")
+        c1, c2 = st.columns([1.2, 1])
+
+        with c1:
+            st.markdown("**Tortni prikaz (normalizirano na 100%)**")
+            pie_df = struct.sort_values("Delež_norm", ascending=False)
+            pie_df["Trg_short"] = pie_df["Trg"].apply(lambda x: shorten_label(x, 24))
+
+            fig = px.pie(
+                pie_df,
+                names="Trg_short",
+                values="Delež_norm",
+                color="Trg",
+                color_discrete_map=MARKET_COLOR_MAP,
+                hole=0.4,  # donut style (optional, looks nice),
+            )
+
+            fig.update_traces(
+                textposition="inside",
+                textinfo="percent+label",
+                hovertemplate="<b>%{customdata[0]}</b><br>Delež: %{percent}<extra></extra>",
+                customdata=pie_df[["Trg"]].values
+            )
+
+            fig.update_layout(
+                margin=dict(t=10, b=10, l=10, r=10),
+                showlegend=True,
+                legend_title_text="Trgi"
+            )
 
 
-title, group_col = next(v for v in views if v[0] == selected_view_label)
-render_view(title, group_col)
+            st.plotly_chart(fig, use_container_width=True)
+
+        with c2:
+            st.markdown("**Tabela**")
+            t = struct.copy()
+            t["Delež (%)"] = (t["Delež_norm"] * 100).round(1)
+            t = t[["Trg", "Delež (%)"]].sort_values("Delež (%)", ascending=False)
+            st.dataframe(t, use_container_width=True, hide_index=True)
+
+        st.caption("Opomba: deleži so izračunani uteženo glede na celotno število prenočitev in nato normalizirani na 100% (zaradi zaokroževanja/manjkajočih trgov).")
+
+    else:
+        # ---- Občine znotraj območja
+        st.markdown(f"### Občine znotraj območja: {selected_group}")
+
+        # izberi občino za graf
+        muni_col = "Občine"
+        sub_m = sub[[muni_col, base_weight_col] + market_cols].copy()
+        sub_m = sub_m.rename(columns={muni_col: "Občina"})
+
+        chosen_muni = st.selectbox(
+            "Izberi občino",
+            sub_m["Občina"].dropna().astype(str).tolist(),
+            index=0,
+            key=f"trgi_muni_{group_col}"
+        )
+
+        muni_row = sub_m[sub_m["Občina"] == chosen_muni].iloc[0]
+        muni_vals = []
+        for col, lab in zip(market_cols, market_labels):
+            muni_vals.append({"Trg": lab, "Delež": float(muni_row[col]) if pd.notna(muni_row[col]) else np.nan})
+
+        muni_struct = pd.DataFrame(muni_vals).dropna()
+        ssum = float(muni_struct["Delež"].sum()) if not muni_struct.empty else 0.0
+        if ssum > 0:
+            muni_struct["Delež_norm"] = muni_struct["Delež"] / ssum
+        else:
+            muni_struct["Delež_norm"] = np.nan
+
+        c1, c2 = st.columns([1.2, 1])
+        with c1:
+            st.markdown(f"**{chosen_muni} – tortni prikaz (normalizirano na 100%)**")
+            pie_df = muni_struct.sort_values("Delež_norm", ascending=False)
+            pie_df["Trg_short"] = pie_df["Trg"].apply(lambda x: shorten_label(x, 24))
+
+            fig = px.pie(
+                pie_df,
+                names="Trg_short",
+                values="Delež_norm",
+                color_discrete_map=MARKET_COLOR_MAP,
+                color = "Trg",
+                hole=0.4
+            )
+
+            fig.update_traces(
+                textposition="inside",
+                textinfo="percent+label",
+                hovertemplate="<b>%{customdata[0]}</b><br>Delež: %{percent}<extra></extra>",
+                customdata=pie_df[["Trg"]].values
+            )
+
+            fig.update_layout(
+                margin=dict(t=10, b=10, l=10, r=10),
+                showlegend=True,
+                legend_title_text = "Trgi"
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
+        with c2:
+            st.markdown("**Tabela**")
+            t = muni_struct.copy()
+            t["Delež (%)"] = (t["Delež_norm"] * 100).round(1)
+            t = t[["Trg", "Delež (%)"]].sort_values("Delež (%)", ascending=False)
+            st.dataframe(t, use_container_width=True, hide_index=True)
+
+        st.markdown("**Tabela občin (povzetek)**")
+        # povzetek: prikaži top trg (največji delež) za vsako občino + prenočitve
+        def top_market(row):
+            pairs = [(lab, row[col]) for col, lab in zip(market_cols, market_labels) if pd.notna(row[col])]
+            if not pairs:
+                return ("—", np.nan)
+            lab, val = max(pairs, key=lambda x: x[1])
+            return (lab, val)
+
+        tops = sub_m.copy()
+        tops["Top trg"] = tops.apply(lambda r: top_market(r)[0], axis=1)
+        tops["Top trg delež (%)"] = tops.apply(lambda r: top_market(r)[1] * 100 if pd.notna(top_market(r)[1]) else np.nan, axis=1)
+        tops["Top trg delež (%)"] = tops["Top trg delež (%)"].round(1)
+
+        tops_view = tops[["Občina", base_weight_col, "Top trg", "Top trg delež (%)"]].copy()
+        tops_view = tops_view.sort_values(base_weight_col, ascending=False, na_position="last")
+        st.dataframe(tops_view, use_container_width=True, hide_index=True)
+
+
+tab_kazalniki, tab_trgi = st.tabs(["Kazalniki", "Struktura prenočitev po trgih"])
+
+with tab_kazalniki:
+    view_labels = [v[0] for v in views]
+    selected_view_label = st.selectbox("Pogled", view_labels, index=0, key="view_main")
+    title, group_col = next(v for v in views if v[0] == selected_view_label)
+    render_view(title, group_col)
+
+with tab_trgi:
+    view_labels = [v[0] for v in views]
+    selected_view_label_trgi = st.selectbox("Pogled", view_labels, index=0, key="view_trgi")
+    title_trgi, group_col_trgi = next(v for v in views if v[0] == selected_view_label_trgi)
+    render_market_structure(title_trgi, group_col_trgi, market_cols, market_labels)
+
 
 st.image("footer_logo.jpg", width= 200)
 
