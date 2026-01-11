@@ -22,17 +22,6 @@ try:
 except Exception:
     gpd = None
 
-st.sidebar.write("geopandas:", "OK" if gpd is not None else "MISSING")
-st.sidebar.write("folium:", "OK" if folium is not None else "MISSING")
-
-
-import geopandas
-
-st.sidebar.write("versions:", {
-    "streamlit": st.__version__,
-    "geopandas": geopandas.__version__,
-})
-
 
 DATA_XLSX_DEFAULT = "Skupna tabela občine.xlsx"
 GEOJSON_DEFAULT = "si.json"
