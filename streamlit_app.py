@@ -7,7 +7,7 @@
 import json
 import re
 from pathlib import Path
-
+import hmac
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -22,6 +22,32 @@ try:
     import geopandas as gpd
 except Exception:
     gpd = None
+
+
+def require_password():
+    # Read password from secrets
+    if "APP_PASSWORD" not in st.secrets:
+        st.error("Manjka APP_PASSWORD v Streamlit Secrets.")
+        st.stop()
+
+    # Already authenticated?
+    if st.session_state.get("authenticated", False):
+        return
+
+    st.title("Prijava")
+    pwd = st.text_input("Geslo", type="password")
+
+    if st.button("Vstopi"):
+        ok = hmac.compare_digest(pwd, st.secrets["APP_PASSWORD"])
+        if ok:
+            st.session_state["authenticated"] = True
+            st.rerun()
+        else:
+            st.error("Napačno geslo.")
+
+    st.stop()
+
+require_password()
 
 
 DATA_XLSX_DEFAULT = "Skupna tabela občine.xlsx"
