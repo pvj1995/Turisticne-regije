@@ -25,25 +25,25 @@ except Exception:
 
 
 def require_password():
-    # Read password from secrets
     if "APP_PASSWORD" not in st.secrets:
         st.error("Manjka APP_PASSWORD v Streamlit Secrets.")
         st.stop()
 
-    # Already authenticated?
     if st.session_state.get("authenticated", False):
         return
 
     st.title("Prijava")
-    pwd = st.text_input("Geslo", type="password")
 
-    if st.button("Vstopi"):
-        ok = hmac.compare_digest(pwd, st.secrets["APP_PASSWORD"])
-        if ok:
-            st.session_state["authenticated"] = True
-            st.rerun()
-        else:
-            st.error("Napačno geslo.")
+    with st.form("login_form", clear_on_submit=False):
+        pwd = st.text_input("Geslo", type="password")
+        submitted = st.form_submit_button("Vstopi")
+
+        if submitted:
+            if hmac.compare_digest(pwd, st.secrets["APP_PASSWORD"]):
+                st.session_state["authenticated"] = True
+                st.rerun()
+            else:
+                st.error("Napačno geslo.")
 
     st.stop()
 
@@ -153,8 +153,9 @@ AGG_RULES = {
     "Štev.dijakov in študentov višjih strok. in visokošolsk.progr./1000 preb.": ("wmean", "Število prebivalcev (H2/2024)"),
     "Število vseh stanovanj": ("sum", None),
     "Delež naseljenih stanovanj": ("wmean", "Število vseh stanovanj"),
-    "GINI Indeks - sezonskost prenočitev": ("wmean", 'Prenočitve - povprečno število prenočitev na mesec'),
-    "Gibanje GINI Indeksa prenoč. 2024/2019": ("wmean", 'Prenočitve - povprečno število prenočitev na mesec'),
+    "GINI Indeks - sezonskost prenočitev - 2019": ("wmean", 'Prenočitve - povprečno število prenočitev na mesec'),
+    "GINI Indeks - sezonskost prenočitev - 2024": ("wmean", 'Prenočitve - povprečno število prenočitev na mesec'),
+    "Gibanje GINI Indeksa prenoč. 2024/2019": ("wmean", 'GINI Indeks - sezonskost prenočitev - 2019'),
     "Delež vseh prenočitev - Domači trg": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
     "Delež vseh prenočitev - DACH trgi": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
     "Delež vseh prenočitev - Italijanski trg": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
