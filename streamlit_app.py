@@ -207,7 +207,7 @@ def is_percent_like(col: str) -> bool:
     c = col.lower()
 
     # stvari, ki so *deleži/indeksi* 
-    positive = ["delež", "marža", "%", "stopnja", "povprečna letna zasedenost", "ocenjena povp", "donosnost", "dobičkovnost"]
+    positive = ["delež", "marža", "%", "stopnja", "povprečna letna zasedenost", "ocenjena povp", "donosnost", "dobičkovnost", "Rast števila prenočitev"]
 
     # stvari, ki so rate-i in jih *ne* želiš kot %
     negative = ["/1000", "na 1000", "na 1", "na preb", "kg/preb", "€/preb", "na km2", "gostota"]
