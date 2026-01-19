@@ -59,11 +59,18 @@ AGG_RULES = {
     'Število prebivalcev (H2/2024)': ("sum", None),
     'Povprečna starost prebivalcev': ("wmean", 'Število prebivalcev (H2/2024)'),
     'Naravni prirast /1000 prebival.': ("wmean", 'Število prebivalcev (H2/2024)'),
-    'Prenočitve turistov SKUPAJ': ("sum", None),
-    'Prenočitve turistov Domači': ("sum", None),
-    'Prenočitve turistov\tTuji': ("sum", None),
+    'Prenočitve turistov SKUPAJ - 2019': ("sum", None),
+    'Prenočitve turistov Domači - 2019': ("sum", None),
+    'Prenočitve turistov Tuji - 2019': ("sum", None),
+    'Prenočitve turistov SKUPAJ - 2024': ("sum", None),
+    'Prenočitve turistov Domači - 2024': ("sum", None),
+    'Prenočitve turistov Tuji - 2024': ("sum", None),
     'Prenočitve - povprečno število prenočitev na mesec': ("sum", None),
-    'Delež tujih prenočitev': ("wmean", 'Prenočitve turistov SKUPAJ'),
+    'Delež tujih prenočitev - 2019': ("wmean", 'Prenočitve turistov SKUPAJ - 2019'),
+    'Delež tujih prenočitev - 2024': ("wmean", 'Prenočitve turistov SKUPAJ - 2024'),
+    'Rast števila prenočitev 2024/2019 - SKUPAJ': ("wmean", 'Prenočitve turistov SKUPAJ - 2019'),
+    'Rast števila prenočitev 2024/2019 - Domači': ("wmean", 'Prenočitve turistov SKUPAJ - 2019'),
+    'Rast števila prenočitev 2024/2019 - Tuji': ("wmean", 'Prenočitve turistov SKUPAJ - 2019'),
     'Prihodi turistov SKUPAJ': ("sum", None),
     'Prihodi turistov Domači': ("sum", None),
     'Prihodi turistov Tuji': ("sum", None),
@@ -125,10 +132,10 @@ AGG_RULES = {
     "Donosnost sredstev v nastanitveni dejav. (I 55)": ("wmean", "Sredstva v reg. Podjetjih in s.p. v nastanitveni dejav. (I 55)"),
     "Donosnost kapitala v nastanitveni dejav. (I 55)": ("wmean", "Kapital v reg. Podjetjih in s.p. v nastanitveni dejav. (I 55)"),
     "Dobičkovnost prihodkov v nastanitveni dejav. (I 55)": ("wmean", "Prihodki reg.podjetij in s.p. v nastanitveni dejav. (I 55)"),
-    "Celotni prihodki v nastan. dejav. na prenočitev": ("wmean", "Prenočitve turistov SKUPAJ"),
-    "Ocenjeni prihodki iz nast. dejav. na prenočitev": ("wmean", "Prenočitve turistov SKUPAJ"),
+    "Celotni prihodki v nastan. dejav. na prenočitev": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
+    "Ocenjeni prihodki iz nast. dejav. na prenočitev": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
     "Ocenjeni prihodki iz nastan. dej. na razpoložljivo sobo (enoto)": ("wmean", 'Nastanitvene kapacitete - Nedeljive enote'),
-    "Ocenjeni prihodki iz nast.dej. na prodano sobo (ned.enoto)": ("wmean", "Prenočitve turistov SKUPAJ"),
+    "Ocenjeni prihodki iz nast.dej. na prodano sobo (ned.enoto)": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
     "Poraba el.energije (MWh) Dejavnost Gostinstvo (I)": ("sum", None),
     "Poraba el.energ. v kWh na realiz. 1000 EUR prihodka v Gostinstvu (I)": ("wmean", "Prihodki reg.podjetij in s.p. v Gostinstvu (I)"),
     "Število kmetijskih  gospodarstev": ("sum", None),
@@ -147,14 +154,14 @@ AGG_RULES = {
     "Število vseh stanovanj": ("sum", None),
     "Delež naseljenih stanovanj": ("wmean", "Število vseh stanovanj"),
     "GINI Indeks - sezonskost prenočitev": ("wmean", 'Prenočitve - povprečno število prenočitev na mesec'),
-    "Delež vseh prenočitev - Domači trg": ("wmean", "Prenočitve turistov SKUPAJ"),
-    "Delež vseh prenočitev - DACH trgi": ("wmean", "Prenočitve turistov SKUPAJ"),
-    "Delež vseh prenočitev - Italijanski trg": ("wmean", "Prenočitve turistov SKUPAJ"),
-    "Delež vseh prenočitev - Vzh.evropski trgi (PL,CZ,HU,SK,LIT,LTV,EST,RU,UKR)": ("wmean", "Prenočitve turistov SKUPAJ"),
-    "Delež vseh prenočitev - Drugi zah.in sev. evropski trgi (ES,P, F,Benelux, Skandinavske države)": ("wmean", "Prenočitve turistov SKUPAJ"),
-    "Delež vseh prenočitev - Prekomorski trgi (ZDA, VB, CAN, AU, Azija)": ("wmean", "Prenočitve turistov SKUPAJ"),
-    "Delež vseh prenočitev - Trgi JV Evrope": ("wmean", "Prenočitve turistov SKUPAJ"),
-    "Delež vseh prenočitev - Vsi drugi tuji trgi": ("wmean", "Prenočitve turistov SKUPAJ"),
+    "Delež vseh prenočitev - Domači trg": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
+    "Delež vseh prenočitev - DACH trgi": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
+    "Delež vseh prenočitev - Italijanski trg": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
+    "Delež vseh prenočitev - Vzh.evropski trgi (PL,CZ,HU,SK,LIT,LTV,EST,RU,UKR)": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
+    "Delež vseh prenočitev - Drugi zah.in sev. evropski trgi (ES,P, F,Benelux, Skandinavske države)": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
+    "Delež vseh prenočitev - Prekomorski trgi (ZDA, VB, CAN, AU, Azija)": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
+    "Delež vseh prenočitev - Trgi JV Evrope": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
+    "Delež vseh prenočitev - Vsi drugi tuji trgi": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
 }
 
 
@@ -326,7 +333,7 @@ def aggregate_indicator_with_rules(df: pd.DataFrame, indicator: str, agg_rules: 
     if "Celotni prihodki v nastan. dejav. na prenočitev" in indicator :
 
         values1 = sum(df["Prihodki reg.podjetij in s.p. v nastanitveni dejav. (I 55)"].astype(float))
-        values2 = sum(df['Prenočitve turistov SKUPAJ'])
+        values2 = sum(df['Prenočitve turistov SKUPAJ - 2024'])
 
 
         
@@ -335,7 +342,7 @@ def aggregate_indicator_with_rules(df: pd.DataFrame, indicator: str, agg_rules: 
     if "Ocenjeni prihodki iz nast. dejav. na prenočitev" in indicator :
 
         values1 = sum(df["Prihodki reg.podjetij in s.p. v nastanitveni dejav. (I 55)"].astype(float)) * 0.8
-        values2 = sum(df['Prenočitve turistov SKUPAJ'])
+        values2 = sum(df['Prenočitve turistov SKUPAJ - 2024'])
   
 
         
@@ -355,7 +362,7 @@ def aggregate_indicator_with_rules(df: pd.DataFrame, indicator: str, agg_rules: 
         kampi_zasedenost = 2.5* (kampi/vse_enote)
         druge_zasedenost = 2 * (druge_enote/vse_enote)
         
-        values2 = sum(df["Prenočitve turistov SKUPAJ"])/ (hoteli_zasedenost + kampi_zasedenost + druge_zasedenost)
+        values2 = sum(df["Prenočitve turistov SKUPAJ - 2024"])/ (hoteli_zasedenost + kampi_zasedenost + druge_zasedenost)
            
         return values1/values2
     
@@ -935,7 +942,7 @@ def render_market_structure(view_title: str, group_col: str, market_cols: list[s
 
     # numeric parsing (potrebno za izračune)
     num_df = df_groups.copy()
-    base_weight_col = "Prenočitve turistov SKUPAJ"
+    base_weight_col = "Prenočitve turistov SKUPAJ - 2024"
     cols_needed = [base_weight_col] + market_cols
     for c in cols_needed:
         if c in num_df.columns:
