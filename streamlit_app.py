@@ -155,7 +155,7 @@ AGG_RULES = {
     "Delež naseljenih stanovanj": ("wmean", "Število vseh stanovanj"),
     "GINI Indeks - sezonskost prenočitev - 2019": ("wmean", 'Prenočitve - povprečno število prenočitev na mesec'),
     "GINI Indeks - sezonskost prenočitev - 2024": ("wmean", 'Prenočitve - povprečno število prenočitev na mesec'),
-    "Gibanje GINI Indeksa prenoč. 2024/2019": ("wmean", 'GINI Indeks - sezonskost prenočitev - 2019'),
+    "Gibanje GINI Indeksa prenoč. 2024/2019": ("wmean", 'GINI Indeks - sezonskost prenočitev - 2019'*'Prenočitve - povprečno število prenočitev na mesec'),
     "Delež vseh prenočitev - Domači trg": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
     "Delež vseh prenočitev - DACH trgi": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
     "Delež vseh prenočitev - Italijanski trg": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
