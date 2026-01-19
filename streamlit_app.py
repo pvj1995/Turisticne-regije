@@ -155,7 +155,6 @@ AGG_RULES = {
     "Delež naseljenih stanovanj": ("wmean", "Število vseh stanovanj"),
     "GINI Indeks - sezonskost prenočitev - 2019": ("wmean", 'Prenočitve - povprečno število prenočitev na mesec'),
     "GINI Indeks - sezonskost prenočitev - 2024": ("wmean", 'Prenočitve - povprečno število prenočitev na mesec'),
-    "Gibanje GINI Indeksa prenoč. 2024/2019": ("wmean", 'GINI Indeks - sezonskost prenočitev - 2019'*'Prenočitve - povprečno število prenočitev na mesec'),
     "Delež vseh prenočitev - Domači trg": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
     "Delež vseh prenočitev - DACH trgi": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
     "Delež vseh prenočitev - Italijanski trg": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
@@ -332,6 +331,22 @@ def try_load_geojson(path: Path):
 
 
 def aggregate_indicator_with_rules(df: pd.DataFrame, indicator: str, agg_rules: dict):
+    if "Gibanje GINI Indeksa prenoč. 2024/2019" in indicator :
+        indeks = df['GINI Indeks - sezonskost prenočitev - 2019']
+        nocitve = df['Prenočitve - povprečno število prenočitev na mesec']
+
+        values = df["Gibanje GINI Indeksa prenoč. 2024/2019"]
+        utez = indeks*nocitve
+
+        weights = utez.astype(float)
+        mask = (~values.isna()) & (~weights.isna()) & (weights > 0)
+
+        if not mask.any():
+            
+            return np.nan
+        
+        return float(np.average(values[mask], weights= weights[mask]))
+    
     if "Celotni prihodki v nastan. dejav. na prenočitev" in indicator :
 
         values1 = sum(df["Prihodki reg.podjetij in s.p. v nastanitveni dejav. (I 55)"].astype(float))
