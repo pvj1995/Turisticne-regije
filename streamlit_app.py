@@ -341,7 +341,7 @@ def aggregate_indicator_with_rules(df: pd.DataFrame, indicator: str, agg_rules: 
             "Ljubljana in osrednja Slovenija": 98.2, 
             "Štajerska (Maribor, Pohorje, Ptuj)": 98.2,
             "Zgornje Savinjska, Šaleška in Koroška": 117.3,
-            "Pomurje": 131.9, ################
+            "Pomurje": 131.9,
             "Posavje": 89.8,
             "Ankaran": 92.5,
             "Bela Krajina": 107.8,
@@ -353,7 +353,7 @@ def aggregate_indicator_with_rules(df: pd.DataFrame, indicator: str, agg_rules: 
             "Cerkno": 104.6,
             "Čatež in Posavje": 89.9,
             "Dobrna": 60.2,
-            "Dolenjska": 76.7, #####
+            "Dolenjska ": 76.7,
             "Dolina Soče": 105.7,
             "Idrija": 120.4,
             "Izola": 90.9,
@@ -373,6 +373,7 @@ def aggregate_indicator_with_rules(df: pd.DataFrame, indicator: str, agg_rules: 
             "Ptuj": 99.5,
             "Radovljica": 109.5,
             "Rogaška Slatina": 130.9,
+            "Rogla-Pohorje": 95.4,
             "Škofja Loka": 104.0,
             "Velenje - Topolšica": 159.5,
             "Zeleni Kras": 103.7,
