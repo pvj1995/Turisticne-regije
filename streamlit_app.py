@@ -153,7 +153,6 @@ AGG_RULES = {
     "Štev.dijakov in študentov višjih strok. in visokošolsk.progr./1000 preb.": ("wmean", "Število prebivalcev (H2/2024)"),
     "Število vseh stanovanj": ("sum", None),
     "Delež naseljenih stanovanj": ("wmean", "Število vseh stanovanj"),
-    "GINI Indeks - sezonskost prenočitev - 2019": ("wmean", 'Prenočitve - povprečno število prenočitev na mesec'),
     "GINI Indeks - sezonskost prenočitev - 2024": ("wmean", 'Prenočitve - povprečno število prenočitev na mesec'),
     "Delež vseh prenočitev - Domači trg": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
     "Delež vseh prenočitev - DACH trgi": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
@@ -200,7 +199,7 @@ def is_rate_like(col: str) -> bool:
     c = col.lower()
     keywords = [
         "%", "delež", "/1000", "povpre", "indeks", "stopnja", "na 1", "na 1000", "na preb",
-        "kg/preb", "€/preb", "na km2", "gostota", "marža", "povprečna letna zasedenost", "cenjena povp", "donosnost", "dobičkovnost"
+        "kg/preb", "€/preb", "na km2", "gostota", "marža", "povprečna letna zasedenost", "cenjena povp", "donosnost", "dobičkovnost", "gini"
     ]
     return any(k in c for k in keywords)
 
@@ -330,22 +329,55 @@ def try_load_geojson(path: Path):
 
 
 
-def aggregate_indicator_with_rules(df: pd.DataFrame, indicator: str, agg_rules: dict):
+def aggregate_indicator_with_rules(df: pd.DataFrame, indicator: str, agg_rules: dict, region):
     if "Gibanje GINI Indeksa prenoč. 2024/2019" in indicator :
-        indeks = df['GINI Indeks - sezonskost prenočitev - 2019']
-        nocitve = df['Prenočitve - povprečno število prenočitev na mesec']
+        num_dict = {
+            "Slovenska Istra" :102.0,
+            "Julijske Alpe": 108.7, 
+            "Gorenjska": 128.3,
+            "Goriško, Vipava, Kras": 117.2,
+            "Savinjsko, Celje, Obsotelje in Kozjansko": 117.2,
+            "Dolenjska, Bela Krajina in Kočevsko": 112.3,
+            "Ljubljana in osrednja Slovenija": 99.7, 
+            "Štajerska (Maribor, Pohorje, Ptuj)": 98.2,
+            "Zgornje Savinjska, Šaleška in Koroška": 117.3,
+            "Pomurje": 131.9,
+            "Posavje": 89.8,
+            "Ankaran": 92.5,
+            "Bela Krajina": 107.8,
+            "Bled": 108.5,
+            "Bohinj": 95.3,
+            "Brda": 121.1,
+            "Celje": 109.1,
+            "Cerklje": 108.5,
+            "Cerkno": 104.6,
+            "Čatež in Posavje": 89.9,
+            "Dobrna": 60.2,
+            "Dolenjska": 76.7,
+            "Dolina Soče": 105.7,
+            "Idrija": 120.4,
+            "Izola": 90.9,
+            "Kamnik": 104.5,
+            "Škofja Loka": 104.0,
+            "Velenje - Topolšica": 159.5,
+            "Zeleni Kras": 103.7,
+            "Zgornja Savinjska dolina": 111.1,
+            "Zasavje": 59.4,
+            "Dežela pod Karavankami": 109.5,
+            "Dežela pod Storžičem-Jezersko": 107.2,
+            "Dežela suhe robe": 121.6,
+            "Haloze": 103.1,
+            "Jeruzalem - Ormož": 177.7,
+            "Dolina Voglajne": 107.2,
+            "Spodnja Savinjska Dolina": 92.8,
+            "Alpska Slovenija": 110.3,
+            "Mediteranska Slovenija": 104.4,
+            "Osrednja Slovenija in Ljubljana": 101.5,
+            "Termalna panonska Slovenija": 105.7
+        }
 
-        values = df["Gibanje GINI Indeksa prenoč. 2024/2019"]
-        utez = indeks*nocitve
-
-        weights = utez.astype(float)
-        mask = (~values.isna()) & (~weights.isna()) & (weights > 0)
-
-        if not mask.any():
-            
-            return np.nan
-        
-        return float(np.average(values[mask], weights= weights[mask]))
+        if region in num_dict.keys():
+            return num_dict[region]
     
     if "Celotni prihodki v nastan. dejav. na prenočitev" in indicator :
 
@@ -432,7 +464,8 @@ def compute_region_aggregates1(num_df, regions, indicator_cols, agg_rules, group
         out[ind] = [aggregate_indicator_with_rules(
             num_df[num_df[group_col] == r],
             ind,
-            agg_rules
+            agg_rules,
+            r
         )
         for r in regions]
     
@@ -816,10 +849,10 @@ def render_view(view_title: str, group_col: str):
         st.subheader("Povzetek izbrane regije")
         
         reg_df = num_df[num_df[group_col] == selected_region].copy()
-        reg_total = aggregate_indicator_with_rules(reg_df, map_indicator, AGG_RULES)
+        reg_total = aggregate_indicator_with_rules(reg_df, map_indicator, AGG_RULES, selected_region)
 
         # "Slovenija total" – smiselno le za seštevne indikatorje
-        sl_total = aggregate_indicator_with_rules(df_slo_total, map_indicator, AGG_RULES)
+        sl_total = aggregate_indicator_with_rules(df_slo_total, map_indicator, AGG_RULES, None)
         
         share_si = np.nan
         if (not is_rate_like(map_indicator)) and sl_total and not np.isnan(sl_total) and sl_total != 0:
@@ -849,7 +882,7 @@ def render_view(view_title: str, group_col: str):
                 v_reg = float(region_agg.loc[region_agg[group_col] == selected_region, ind].iloc[0])
 
                 # total Slovenije za ta indikator
-                v_slo = aggregate_indicator_with_rules(df_slo_total, ind, AGG_RULES)
+                v_slo = aggregate_indicator_with_rules(df_slo_total, ind, AGG_RULES, None)
 
                 # delež Slovenije (samo za seštevne indikatorje)
                 share = np.nan
@@ -914,7 +947,7 @@ def render_view(view_title: str, group_col: str):
         else:
             st.markdown(f"**Tabela občin znotraj območja** \n \n **:blue[{map_indicator}]**")
             reg_df = num_df[num_df[group_col] == selected_region].copy()
-            reg_total = aggregate_indicator_with_rules(reg_df, map_indicator, AGG_RULES)
+            reg_total = aggregate_indicator_with_rules(reg_df, map_indicator, AGG_RULES, None)
             
             cfg_df = pd.DataFrame({
                 "Občina": reg_df["Občine"].astype(str),
