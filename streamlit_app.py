@@ -594,7 +594,7 @@ def render_map_regions(regions_geojson: dict, region_to_value: dict, indicator_l
         style_function=style_fn,
         tooltip=folium.GeoJsonTooltip(
             fields=[group_col, "_vrednost_fmt"],
-            aliases=["Regija:", f"{indicator_label}:"],
+            aliases=["Območje:", f"{indicator_label}:"],
             sticky=True
         )
     ).add_to(m)
