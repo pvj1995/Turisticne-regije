@@ -696,13 +696,6 @@ def make_localized_column_config(df: pd.DataFrame):
                 cfg[c] = st.column_config.NumberColumn(format="localized")
     return cfg
 
-def detect_years(cols):
-    years = set()
-    for c in cols:
-        m = re.search(r"(19|20)\d{2}\s*$", str(c))
-        if m:
-            years.add(int(m.group(0)))
-    return sorted(years)
 
 def col_for_year(col_name: str, year: int) -> str:
     """
@@ -1155,7 +1148,7 @@ def render_market_structure(view_title: str, group_col: str, market_cols: list[s
     st.caption(f"**Pogled:** {view_title}")
     st.subheader("Struktura prenočitev po trgih")
 
-    YEARS = detect_years(df.columns)
+    YEARS = [2024, 2025]
     selected_year = st.selectbox("Leto", YEARS, index=len(YEARS)-1, key=f"trgi_year_{group_col}")
 
     if not market_cols:
