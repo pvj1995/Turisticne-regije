@@ -696,6 +696,22 @@ def make_localized_column_config(df: pd.DataFrame):
                 cfg[c] = st.column_config.NumberColumn(format="localized")
     return cfg
 
+def detect_years(cols):
+    years = set()
+    for c in cols:
+        m = re.search(r"(19|20)\d{2}\s*$", str(c))
+        if m:
+            years.add(int(m.group(0)))
+    return sorted(years)
+
+def col_for_year(col_name: str, year: int) -> str:
+    """
+    Zamenja katerokoli 4-mestno letnico v imenu stolpca z izbrano letnico.
+    Primer: 'Prenočitve turistov SKUPAJ - 2024' -> '... - 2025'
+            'Delež vseh prenočitev - Domači trg - 2024' -> '... - 2025' (če ima letnico)
+    """
+    return re.sub(r"(19|20)\d{2}", str(year), col_name)
+
 @st.cache_data(show_spinner=False)
 def render_map_regions(regions_geojson: dict, region_to_value: dict, indicator_label: str,group_col: str, height=680):
     if folium is None or regions_geojson is None:
@@ -1139,6 +1155,9 @@ def render_market_structure(view_title: str, group_col: str, market_cols: list[s
     st.caption(f"**Pogled:** {view_title}")
     st.subheader("Struktura prenočitev po trgih")
 
+    YEARS = detect_years(df.columns)
+    selected_year = st.selectbox("Leto", YEARS, index=len(YEARS)-1, key=f"trgi_year_{group_col}")
+
     if not market_cols:
         st.warning("V Excelu ne najdem stolpcev, ki se začnejo z: 'Delež vseh prenočitev - '.")
         return
@@ -1148,8 +1167,20 @@ def render_market_structure(view_title: str, group_col: str, market_cols: list[s
 
     # numeric parsing (potrebno za izračune)
     num_df = df_groups.copy()
-    base_weight_col = "Prenočitve turistov SKUPAJ - 2024"
-    cols_needed = [base_weight_col] + market_cols
+   
+    # ---- Stolpci za izbrano leto
+    base_weight_col_template = "Prenočitve turistov SKUPAJ - 2024"
+    base_weight_col = col_for_year(base_weight_col_template, selected_year)
+
+    market_cols_year = [col_for_year(c, selected_year) for c in market_cols]
+
+    # Preveri, kateri stolpci dejansko obstajajo (da se ne sesuje, če kje manjka)
+    cols_needed = [base_weight_col] + market_cols_year
+    missing = [c for c in cols_needed if c not in num_df.columns]
+    if missing:
+        st.warning("Manjkajo stolpci za izbrano leto: " + ", ".join(missing))
+        return
+
     for c in cols_needed:
         if c in num_df.columns:
             num_df[c] = parse_numeric(num_df[c])
@@ -1181,7 +1212,7 @@ def render_market_structure(view_title: str, group_col: str, market_cols: list[s
 
     if denom and not np.isnan(denom) and denom > 0:
         vals = {}
-        for col, lab in zip(market_cols, market_labels):
+        for col, lab in zip(market_cols_year, market_labels):
             s = sub[col].astype(float)
             mask = (~s.isna()) & (~total_w.isna()) & (total_w > 0)
             if mask.any():
@@ -1249,7 +1280,7 @@ def render_market_structure(view_title: str, group_col: str, market_cols: list[s
 
         # izberi občino za graf
         muni_col = "Občine"
-        sub_m = sub[[muni_col, base_weight_col] + market_cols].copy()
+        sub_m = sub[[muni_col, base_weight_col] + market_cols_year].copy()
         sub_m = sub_m.rename(columns={muni_col: "Občina"})
 
         chosen_muni = st.selectbox(
@@ -1261,7 +1292,7 @@ def render_market_structure(view_title: str, group_col: str, market_cols: list[s
 
         muni_row = sub_m[sub_m["Občina"] == chosen_muni].iloc[0]
         muni_vals = []
-        for col, lab in zip(market_cols, market_labels):
+        for col, lab in zip(market_cols_year, market_labels):
             muni_vals.append({"Trg": lab, "Delež": float(muni_row[col]) if pd.notna(muni_row[col]) else np.nan})
 
         muni_struct = pd.DataFrame(muni_vals).dropna()
@@ -1310,7 +1341,7 @@ def render_market_structure(view_title: str, group_col: str, market_cols: list[s
         st.markdown("**Tabela občin (povzetek)**")
         # povzetek: prikaži top trg (največji delež) za vsako občino + prenočitve
         def top_market(row):
-            pairs = [(lab, row[col]) for col, lab in zip(market_cols, market_labels) if pd.notna(row[col])]
+            pairs = [(lab, row[col]) for col, lab in zip(market_cols_year, market_labels) if pd.notna(row[col])]
             if not pairs:
                 return ("—", np.nan)
             lab, val = max(pairs, key=lambda x: x[1])
