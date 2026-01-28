@@ -65,12 +65,19 @@ AGG_RULES = {
     'Prenočitve turistov SKUPAJ - 2024': ("sum", None),
     'Prenočitve turistov Domači - 2024': ("sum", None),
     'Prenočitve turistov Tuji - 2024': ("sum", None),
+    'Prenočitve turistov SKUPAJ - 2025': ("sum", None),
+    'Prenočitve turistov Domači - 2025': ("sum", None),
+    'Prenočitve turistov Tuji - 2025': ("sum", None),
     'Prenočitve - povprečno število prenočitev na mesec': ("sum", None),
     'Delež tujih prenočitev - 2019': ("wmean", 'Prenočitve turistov SKUPAJ - 2019'),
     'Delež tujih prenočitev - 2024': ("wmean", 'Prenočitve turistov SKUPAJ - 2024'),
+    'Delež tujih prenočitev - 2025': ("wmean", 'Prenočitve turistov SKUPAJ - 2025'),
     'Rast števila prenočitev 2024/2019 - SKUPAJ': ("wmean", 'Prenočitve turistov SKUPAJ - 2019'),
     'Rast števila prenočitev 2024/2019 - Domači': ("wmean", 'Prenočitve turistov SKUPAJ - 2019'),
     'Rast števila prenočitev 2024/2019 - Tuji': ("wmean", 'Prenočitve turistov SKUPAJ - 2019'),
+    'Rast števila prenočitev 2025/2019 - SKUPAJ': ("wmean", 'Prenočitve turistov SKUPAJ - 2019'),
+    'Rast števila prenočitev 2025/2019 - Domači': ("wmean", 'Prenočitve turistov SKUPAJ - 2019'),
+    'Rast števila prenočitev 2025/2019 - Tuji': ("wmean", 'Prenočitve turistov SKUPAJ - 2019'),
     'Prihodi turistov SKUPAJ - 2024': ("sum", None),
     'Prihodi turistov Domači - 2024': ("sum", None),
     'Prihodi turistov Tuji - 2024': ("sum", None),
@@ -995,7 +1002,7 @@ def render_view(view_title: str, group_col: str):
             )
         
     else:
-        st.subheader("Povzetek izbrane regije")
+        st.subheader("Povzetek izbranega območja")
         
         reg_df = num_df[num_df[group_col] == selected_region].copy()
         reg_total = aggregate_indicator_with_rules(reg_df, map_indicator, AGG_RULES, selected_region)
