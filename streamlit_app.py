@@ -212,7 +212,7 @@ def is_rate_like(col: str) -> bool:
     c = col.lower()
     keywords = [
         "%", "delež", "/1000", "povpre", "indeks", "stopnja", "na 1", "na 1000", "na preb",
-        "kg/preb", "€/preb", "na km2", "gostota", "marža", "povprečna letna zasedenost", "cenjena povp", "donosnost", "dobičkovnost", "gini"
+        "kg/preb", "€/preb", "na km2", "gostota", "marža", "povprečna letna zasedenost", "cenjena povp", "donosnost", "dobičkovnost", "gini","rast števila prenočitev"
     ]
     return any(k in c for k in keywords)
 
