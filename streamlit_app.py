@@ -696,6 +696,17 @@ def make_localized_column_config(df: pd.DataFrame):
                 cfg[c] = st.column_config.NumberColumn(format="localized")
     return cfg
 
+def get_market_cols_for_year(df: pd.DataFrame, year: int) -> tuple[list[str], list[str]]:
+    # pobere samo stolpce: "Delež vseh prenočitev - ... - YYYY"
+    pattern = re.compile(rf"^{re.escape(MARKET_PREFIX)}(.+?)\s*-\s*{year}\s*$")
+    cols = []
+    labels = []
+    for c in df.columns:
+        m = pattern.match(str(c))
+        if m:
+            cols.append(c)
+            labels.append(m.group(1).strip())  # ime trga brez letnice
+    return cols, labels
 
 def col_for_year(col_name: str, year: int) -> str:
     """
@@ -1165,7 +1176,7 @@ def render_market_structure(view_title: str, group_col: str, market_cols: list[s
     base_weight_col_template = "Prenočitve turistov SKUPAJ - 2024"
     base_weight_col = col_for_year(base_weight_col_template, selected_year)
 
-    market_cols_year = [col_for_year(c, selected_year) for c in market_cols]
+    market_cols_year, market_labels_year = get_market_cols_for_year(df, selected_year)
 
     # Preveri, kateri stolpci dejansko obstajajo (da se ne sesuje, če kje manjka)
     cols_needed = [base_weight_col] + market_cols_year
@@ -1205,13 +1216,14 @@ def render_market_structure(view_title: str, group_col: str, market_cols: list[s
 
     if denom and not np.isnan(denom) and denom > 0:
         vals = {}
-        for col, lab in zip(market_cols_year, market_labels):
+        for col, lab in zip(market_cols_year, market_labels_year):
             s = sub[col].astype(float)
             mask = (~s.isna()) & (~total_w.isna()) & (total_w > 0)
             if mask.any():
                 vals[lab] = float(np.nansum((s[mask] * total_w[mask]).values) / np.nansum(total_w[mask].values))
             else:
                 vals[lab] = np.nan
+
         struct = pd.DataFrame({"Trg": list(vals.keys()), "Delež": list(vals.values())}).dropna()
     else:
         st.warning("Manjkajo prenočitve SKUPAJ (utež) ali so 0, zato strukture ne morem izračunati.")
@@ -1232,7 +1244,6 @@ def render_market_structure(view_title: str, group_col: str, market_cols: list[s
             st.markdown("**Tortni prikaz (normalizirano na 100%)**")
             pie_df = struct.sort_values("Delež_norm", ascending=False)
             pie_df["Trg_short"] = pie_df["Trg"].apply(lambda x: shorten_label(x, 24))
-
             fig = px.pie(
                 pie_df,
                 names="Trg_short",
@@ -1285,7 +1296,7 @@ def render_market_structure(view_title: str, group_col: str, market_cols: list[s
 
         muni_row = sub_m[sub_m["Občina"] == chosen_muni].iloc[0]
         muni_vals = []
-        for col, lab in zip(market_cols_year, market_labels):
+        for col, lab in zip(market_cols_year, market_labels_year):
             muni_vals.append({"Trg": lab, "Delež": float(muni_row[col]) if pd.notna(muni_row[col]) else np.nan})
 
         muni_struct = pd.DataFrame(muni_vals).dropna()
@@ -1334,7 +1345,7 @@ def render_market_structure(view_title: str, group_col: str, market_cols: list[s
         st.markdown("**Tabela občin (povzetek)**")
         # povzetek: prikaži top trg (največji delež) za vsako občino + prenočitve
         def top_market(row):
-            pairs = [(lab, row[col]) for col, lab in zip(market_cols_year, market_labels) if pd.notna(row[col])]
+            pairs = [(lab, row[col]) for col, lab in zip(market_cols_year, market_labels_year) if pd.notna(row[col])]
             if not pairs:
                 return ("—", np.nan)
             lab, val = max(pairs, key=lambda x: x[1])
