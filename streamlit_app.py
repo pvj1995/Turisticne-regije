@@ -1349,6 +1349,24 @@ def render_market_structure(view_title: str, group_col: str, market_cols: list[s
 
         st.caption("Opomba: deleži so izračunani uteženo glede na celotno število prenočitev in nato normalizirani na 100% (zaradi zaokroževanja/manjkajočih trgov).")
 
+        st.markdown("**Tabela občin (povzetek)**")
+        # povzetek: prikaži top trg (največji delež) za vsako občino + prenočitve
+        def top_market(row):
+            pairs = [(lab, row[col]) for col, lab in zip(market_cols_year, market_labels_year) if pd.notna(row[col])]
+            if not pairs:
+                return ("—", np.nan)
+            lab, val = max(pairs, key=lambda x: x[1])
+            return (lab, val)
+
+        tops = sub_m.copy()
+        tops["Top trg"] = tops.apply(lambda r: top_market(r)[0], axis=1)
+        tops["Top trg delež (%)"] = tops.apply(lambda r: top_market(r)[1] * 100 if pd.notna(top_market(r)[1]) else np.nan, axis=1)
+        tops["Top trg delež (%)"] = tops["Top trg delež (%)"].round(1)
+
+        tops_view = tops[["Občina", base_weight_col, "Top trg", "Top trg delež (%)"]].copy()
+        tops_view = tops_view.sort_values(base_weight_col, ascending=False, na_position="last")
+        st.dataframe(tops_view, use_container_width=True, hide_index=True)
+
     else:
         # ---- Občine znotraj območja
         st.markdown(f"### Občine znotraj območja: {selected_group}")
@@ -1413,23 +1431,7 @@ def render_market_structure(view_title: str, group_col: str, market_cols: list[s
             t = t[["Trg", "Delež (%)"]].sort_values("Delež (%)", ascending=False)
             st.dataframe(t, use_container_width=True, hide_index=True)
 
-        st.markdown("**Tabela občin (povzetek)**")
-        # povzetek: prikaži top trg (največji delež) za vsako občino + prenočitve
-        def top_market(row):
-            pairs = [(lab, row[col]) for col, lab in zip(market_cols_year, market_labels_year) if pd.notna(row[col])]
-            if not pairs:
-                return ("—", np.nan)
-            lab, val = max(pairs, key=lambda x: x[1])
-            return (lab, val)
-
-        tops = sub_m.copy()
-        tops["Top trg"] = tops.apply(lambda r: top_market(r)[0], axis=1)
-        tops["Top trg delež (%)"] = tops.apply(lambda r: top_market(r)[1] * 100 if pd.notna(top_market(r)[1]) else np.nan, axis=1)
-        tops["Top trg delež (%)"] = tops["Top trg delež (%)"].round(1)
-
-        tops_view = tops[["Občina", base_weight_col, "Top trg", "Top trg delež (%)"]].copy()
-        tops_view = tops_view.sort_values(base_weight_col, ascending=False, na_position="last")
-        st.dataframe(tops_view, use_container_width=True, hide_index=True)
+        
 
 
 tab_kazalniki, tab_trgi = st.tabs(["Kazalniki", "Struktura prenočitev po trgih"])
