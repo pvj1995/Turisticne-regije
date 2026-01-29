@@ -177,6 +177,58 @@ AGG_RULES = {
     "Delež vseh prenočitev - Vsi drugi tuji trgi": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
 }
 
+INDIKATORJI_Z_OPOMBO = {
+    "Zaposleni v Gostinstvu (I) v registr.podjetjih in s.p.",
+    "Zaposleni v nastan.dejav. (I55) v registr.podjetjih in s.p.",
+    "Vsi delovni aktivni na območju",
+    "Delež delovno aktivnih v turizmu (OECD/WTO)",
+    "Število vseh vrst podjetij na območju",
+    "Prihodek (v 1000 EUR) vseh podjetij na območju",
+    "Število reg. podjetij in s.p.  v Gostinstvu (I)",
+    "Prihodki reg.podjetij in s.p. v Gostinstvu (I)",
+    "Dodana vrednost reg.podjetij v Gostinstvu (I)",
+    "Dodana vrednost/zaposl. reg.podjetij Gostinstvu (I)",
+    "Ocenjeni stroški dela v reg. podj. v Gostinski (I) dejavnosti",
+    "Stroški dela na zaposl. na leto v reg. podj. v Gostinski (I) dejavnosti",
+    "Delež stroškov dela v prihodkih v reg. podj. v Gostinstvu (I)",
+    "Delež stroškov dela v dod vredn. v reg. podj. v Gostinstvu (I)",
+    "EBITDA v reg.podjetjih in s.p. v Gostinstvu (I)",
+    "EBITDA marža v reg.podjetjih in s.p. v Gostinstvu (I)",
+    "Čisti dobiček/izguba v reg. podj. in s.p. v Gostinstvu (I)",
+    "Sredstva v reg. Podjetjih in s.p. v Gostinstvu (I)",
+    "Kapital v reg. Podjetjih in s.p. v Gostinstvu (I)",
+    "Donosnost sredstev v reg. podjetjih in s.p. v Gostinstvu (I)",
+    "Donosnost kapitala v reg. podjetjih in s.p. v Gostinstvu (I)",
+    "Dobičkovnost prihodkov v podjetjih in s.p. v Gostinstvu (I)",
+    "Število reg. podjetij in s.p. v nastanitveni dejav. (I 55)",
+    "Prihodki reg.podjetij in s.p. v nastanitveni dejav. (I 55)",
+    "Dodana vrednost reg.podjetij v nastanitveni dejav. (I 55)",
+    "Dodana vrednost/zaposl. V reg.podjetjih v nast.dejav. (I 55)",
+    "Ocenjeni stroški dela v reg. podj. v nastan.gost. (I 55) dejavnosti",
+    "Stroški dela na zaposl. na leto v reg. podj. v nast.gost. (I 55) dejavnosti",
+    "Delež stroškov dela v prihodkih v reg. podj. v nast.gost.dej. (I 55)",
+    "Delež stroškov dela v dod vredn. v reg. podj. v nast.gost.dej. (I 55)",
+    "EBITDA v reg.podjetjih in s.p. v nastanitveni dejav. (I 55)",
+    "EBITDA marža v reg.podjetjih v nastanitveni dejav. (I 55)",
+    "Čisti dobiček/izguba v reg. podj. v nastanitveni dejav. (I 55)",
+    "Sredstva v reg. Podjetjih in s.p. v nastanitveni dejav. (I 55)",
+    "Kapital v reg. Podjetjih in s.p. v nastanitveni dejav. (I 55)",
+    "Donosnost sredstev v nastanitveni dejav. (I 55)",
+    "Donosnost kapitala v nastanitveni dejav. (I 55)",
+    "Dobičkovnost prihodkov v nastanitveni dejav. (I 55)",
+    "Celotni prihodki v nastan. dejav. na prenočitev",
+    "Ocenjeni prihodki iz nast. dejav. na prenočitev",
+    "Ocenjeni prihodki iz nastan. dej. na razpoložljivo sobo (enoto)",
+    "Ocenjeni prihodki iz nast.dej. na prodano sobo (ned.enoto)"
+}
+
+SKUPNO_OPOZORILO_AGREGACIJA = {
+    "type": "warning",
+    "title": "Glej opozorilo spodaj glede interpretacije tega kazalnika",
+    "text": (
+        "Opozorilo oz. razkritje avtorja izračunov kazalnikov: pri  izračunih ekonomskih in poslovnih kazalnikov, pri katerih se kombinirajo finančni podatki iz bilanc podjetij in s.p. (vir AJPES) in fizični podatki  o številu prenočitev turistov, sob ali ležišč (vir: SURS), lahko prihaja do  nerealnih oz. delno popačenih vrednosti v primerih, kjer so sedeži družb, ki realizirajo finančne kategorije poslovanja v drugih občinah oz. regijah, kot  so realizirane prenočitve oz. registrirana ležišča ali sobe, ki jih upravljajo. Takšen primer je recimo:  sedež družbe Sava Turizem d.d. je v Ljubljani, kjer so prikazani prihodki in druge poslovne kategorije te družbe, medtem, ko so prenočitve, sobe ali ležišča prikazani v dejanski občini, kjer delujejo nastanitveni gostinski obrati v lasti in upravljanju te družbe, ipd.. Prav tako v takšnih primerih niso prikazane realne poslovno-finančne kategorije, ki jih realizirajo takšne družbe v  občinah oz. regijah, kjer dejansko nastajajo (na območjih, kjer nastajajo učinki so torej prikazane poslovno-finančne kategorije nižje od realnih), temveč  se pojavljajo v višjih zneskih v enakih kategorijah v občinah oz. regijah kjer so registrirani sedeži takšnih družb oz. podjetij ali s.p. (tam pa so torej prikazane finančne kategorije višje od realnih). Kljub temu je smiselno opazovati te poslovno-finančne kategorije (ki so edine javno na voljo), ob zavedanju tovrstnega popačenja v podobnih primerih."
+    )
+}
 
 def find_excel_file():
     # 1) poskusi točno ime
@@ -716,6 +768,24 @@ def col_for_year(col_name: str, year: int) -> str:
     """
     return re.sub(r"(19|20)\d{2}", str(year), col_name)
 
+def show_shared_warning_if_needed_indicator(indicator_name: str):
+    if indicator_name not in INDIKATORJI_Z_OPOMBO:
+        return
+
+    msg = SKUPNO_OPOZORILO_AGREGACIJA
+    body = f"{msg['title']}"
+
+    st.warning(body, icon="⚠️")
+
+def show_shared_warning_if_needed_map(indicator_name: str):
+    if indicator_name not in INDIKATORJI_Z_OPOMBO:
+        return
+
+    msg = SKUPNO_OPOZORILO_AGREGACIJA
+    body = f"{msg['text']}"
+
+    st.warning(body, icon="⚠️")
+
 @st.cache_data(show_spinner=False)
 def render_map_regions(regions_geojson: dict, region_to_value: dict, indicator_label: str,group_col: str, height=680):
     if folium is None or regions_geojson is None:
@@ -986,6 +1056,7 @@ def render_view(view_title: str, group_col: str):
         selected_region = st.selectbox(group_col, regions_with_all, index=0, key=f"sel_group_{group_col}")
     with top_right:
         map_indicator = st.selectbox("Indikator za zemljevid", indicator_cols, index=0, key=f"sel_ind_{group_col}")
+        show_shared_warning_if_needed_indicator(map_indicator)
 
     dash_inds = []
     if dashboard_mode:
@@ -1098,7 +1169,7 @@ def render_view(view_title: str, group_col: str):
                 muni_in_region = set(reg_df["__obcina_norm__"].tolist())
                 muni_to_value = {normalize_name(o): float(v) for o, v in zip(reg_df["Občine"], reg_df[map_indicator])}
                 render_map_municipalities(geojson_obj, name_prop, muni_in_region, muni_to_value,indicator_label=map_indicator, height=780)
-
+        show_shared_warning_if_needed_map(map_indicator)
     with table_col:
         if selected_region == "Vsa območja":
             st.markdown(f"**Tabela območij** \n \n **:blue[{map_indicator}]**")
