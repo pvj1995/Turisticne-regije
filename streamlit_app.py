@@ -1016,7 +1016,7 @@ if "Občine" not in df.columns or "Turistična regija" not in df.columns:
 df = df.copy()
 df["__obcina_norm__"] = df["Občine"].apply(normalize_name)
 
-meta_cols = {"Občine", "Turistična regija", "__obcina_norm__", "Vodilne destinacije", "Perspektivne destinacije", "Makro destinacije"}
+meta_cols = {"Občine", "Turistična regija", "__obcina_norm__", "Vodilne destinacije", "Perspektivne destinacije", "Makro destinacije", "SLOVENIJA"}
 indicator_cols = [c for c in df.columns if c not in meta_cols]
 
 pop_candidates = [c for c in indicator_cols if "prebival" in c.lower() and "število" in c.lower()]
@@ -1496,8 +1496,12 @@ with tab_kazalniki:
 
 with tab_trgi:
     view_labels = [v[0] for v in views]
+    view_labels.append("SLOVENIJA")
     selected_view_label_trgi = st.selectbox("Pogled", view_labels, index=0, key="view_trgi")
-    title_trgi, group_col_trgi = next(v for v in views if v[0] == selected_view_label_trgi)
+    if selected_view_label_trgi == "SLOVENIJA":
+        title_trgi, group_col_trgi = ("SLOVENIJA", "SLOVENIJA")
+    else:
+        title_trgi, group_col_trgi = next(v for v in views if v[0] == selected_view_label_trgi)
     render_market_structure(title_trgi, group_col_trgi, market_cols, market_labels)
 
 
