@@ -344,7 +344,7 @@ def format_indicator_value_map(indicator: str, x):
         return format_pct(float(x) * 100.0, 1)
     #GINI indeks izjema
     if "GINI" in indicator:
-        return round(x,2)
+        return format(round(x,2), ".2f")
     # vse ostalo ostane normalno število
     return format_si_number(x)
 
@@ -1151,14 +1151,16 @@ def render_view(view_title: str, group_col: str):
 
         # KPI: prvi je indikator + delež SLO
         if "PDB" in map_indicator or "turizma" in map_indicator:
-            kpi_text = "Indeks Slovenskega povprečja"
+            kpi_text = "Indeks s povprečjem v Sloveniji"
+            kpi_value = format_si_number(share_si, 1)
         else:
             kpi_text = "Delež Slovenije"
+            kpi_value = format_pct(share_si, 1)
 
         left_kpi, right_kpi = st.columns([1.2, 1])
         with left_kpi:
             if not np.isnan(share_si): 
-                st.metric(map_indicator, f"{format_si_number(reg_total)}", f"{kpi_text}: {format_pct(share_si, 1)}")
+                st.metric(map_indicator, f"{format_si_number(reg_total)}", f"{kpi_text}: {kpi_value}")
             else:
                 st.metric(map_indicator, f"{format_indicator_value_map(map_indicator, reg_total)}")
             st.caption("Opomba: »Delež Slovenije« je prikazan za indikatorje, kjer se vrednosti seštevajo (ne za stopnje/indekse).")
