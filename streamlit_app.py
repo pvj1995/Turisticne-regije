@@ -24,30 +24,30 @@ except Exception:
     gpd = None
 
 
-def require_password():
-    if "APP_PASSWORD" not in st.secrets:
-        st.error("Manjka APP_PASSWORD v Streamlit Secrets.")
-        st.stop()
+# def require_password():
+#     if "APP_PASSWORD" not in st.secrets:
+#         st.error("Manjka APP_PASSWORD v Streamlit Secrets.")
+#         st.stop()
 
-    if st.session_state.get("authenticated", False):
-        return
+#     if st.session_state.get("authenticated", False):
+#         return
 
-    st.title("Prijava")
+#     st.title("Prijava")
 
-    with st.form("login_form", clear_on_submit=False):
-        pwd = st.text_input("Geslo", type="password")
-        submitted = st.form_submit_button("Vstopi")
+#     with st.form("login_form", clear_on_submit=False):
+#         pwd = st.text_input("Geslo", type="password")
+#         submitted = st.form_submit_button("Vstopi")
 
-        if submitted:
-            if hmac.compare_digest(pwd, st.secrets["APP_PASSWORD"]):
-                st.session_state["authenticated"] = True
-                st.rerun()
-            else:
-                st.error("Napačno geslo.")
+#         if submitted:
+#             if hmac.compare_digest(pwd, st.secrets["APP_PASSWORD"]):
+#                 st.session_state["authenticated"] = True
+#                 st.rerun()
+#             else:
+#                 st.error("Napačno geslo.")
 
-    st.stop()
+#     st.stop()
 
-require_password()
+# require_password()
 
 
 DATA_XLSX_DEFAULT = "Skupna tabela občine.xlsx"
@@ -219,14 +219,15 @@ INDIKATORJI_Z_OPOMBO = {
     "Celotni prihodki v nastan. dejav. na prenočitev",
     "Ocenjeni prihodki iz nast. dejav. na prenočitev",
     "Ocenjeni prihodki iz nastan. dej. na razpoložljivo sobo (enoto)",
-    "Ocenjeni prihodki iz nast.dej. na prodano sobo (ned.enoto)"
+    "Ocenjeni prihodki iz nast.dej. na prodano sobo (ned.enoto)",
+    "Poraba el.energ. v kWh na realiz. 1000 EUR prihodka v Gostinstvu (I)"
 }
 
 SKUPNO_OPOZORILO_AGREGACIJA = {
     "type": "warning",
     "title": "Glej opozorilo spodaj glede interpretacije tega kazalnika",
     "text": (
-        "Opozorilo oz. razkritje avtorja izračunov kazalnikov: pri  izračunih ekonomskih in poslovnih kazalnikov, pri katerih se kombinirajo finančni podatki iz bilanc podjetij in s.p. (vir AJPES) in fizični podatki  o številu prenočitev turistov, sob ali ležišč (vir: SURS), lahko prihaja do  nerealnih oz. delno popačenih vrednosti v primerih, kjer so sedeži družb, ki realizirajo finančne kategorije poslovanja v drugih občinah oz. regijah, kot  so realizirane prenočitve oz. registrirana ležišča ali sobe, ki jih upravljajo. Takšen primer je recimo:  sedež družbe Sava Turizem d.d. je v Ljubljani, kjer so prikazani prihodki in druge poslovne kategorije te družbe, medtem, ko so prenočitve, sobe ali ležišča prikazani v dejanski občini, kjer delujejo nastanitveni gostinski obrati v lasti in upravljanju te družbe, ipd.. Prav tako v takšnih primerih niso prikazane realne poslovno-finančne kategorije, ki jih realizirajo takšne družbe v  občinah oz. regijah, kjer dejansko nastajajo (na območjih, kjer nastajajo učinki so torej prikazane poslovno-finančne kategorije nižje od realnih), temveč  se pojavljajo v višjih zneskih v enakih kategorijah v občinah oz. regijah kjer so registrirani sedeži takšnih družb oz. podjetij ali s.p. (tam pa so torej prikazane finančne kategorije višje od realnih). Kljub temu je smiselno opazovati te poslovno-finančne kategorije (ki so edine javno na voljo), ob zavedanju tovrstnega popačenja v podobnih primerih."
+        "Opozorilo oz. razkritje avtorja izračunov kazalnikov: pri izračunih ekonomskih in poslovnih kazalnikov, pri katerih se kombinirajo finančni podatki iz bilanc podjetij in s.p. (vir AJPES) in fizični podatki o številu prenočitev turistov, sob, ležišč ali drugi fizični podatki o določenih količinah kot so poraba energije v kWh, ipd.(vir: SURS), lahko prihaja do nerealnih oz. delno popačenih vrednosti v primerih, kjer so sedeži družb, ki realizirajo finančne kategorije poslovanja v drugih občinah oz. regijah, kot so realizirane prenočitve oz. registrirana ležišča ali sobe, ki jih upravljajo in realizirajo določene količinske rezultate. Takšen primer je recimo: sedež družbe Sava Turizem d.d. je v Ljubljani, kjer so prikazani prihodki in druge poslovne kategorije te družbe, medtem, ko so prenočitve, sobe, ležišča, količinska poraba energije, ipd. prikazani v dejanski občini, kjer delujejo nastanitveni gostinski obrati v lasti in upravljanju te družbe, ipd.. Prav tako v takšnih primerih niso prikazane realne poslovno-finančne kategorije, ki jih realizirajo takšne družbe v občinah oz. regijah, kjer ti učinki dejansko nastajajo (na območjih, kjer nastajajo učinki so torej prikazane poslovno-finančne kategorije nižje od realnih), temveč se pojavljajo v višjih zneskih v enakih kategorijah v občinah oz. regijah kjer so registrirani sedeži takšnih družb oz. podjetij ali s.p. (tam pa so torej prikazane finančne kategorije višje od realnih). Kljub temu je smiselno opazovati te poslovno-finančne kategorije (ki so edine javno na voljo), ob zavedanju tovrstnega popačenja v enakih oz. podobnih primerih. Poslovno finančni kazalniki pa se seveda izravnajo in so realno prikazani na ravni celotne Slovenije."
     )
 }
 
@@ -786,6 +787,49 @@ def show_shared_warning_if_needed_map(indicator_name: str):
 
     st.warning(body, icon="⚠️")
 
+def green_metric(label, value):
+    st.markdown(
+        f"""
+        <div style="
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            background-color: #f0fdf4;
+            border: 1px solid #16a34a;
+            text-align: center;
+        ">
+            <div style="color:#15803d; font-size:0.85rem;">
+                {label}
+            </div>
+            <div style="color:#166534; font-size:1.5rem; font-weight:600;">
+                {value}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+def green_metric_small(label, value):
+    st.markdown(
+        f"""
+        <div style="
+            margin-top: 0.35rem;
+            padding: 0.45rem 0.55rem;
+            border-radius: 0.45rem;
+            background-color: #f0fdf4;
+            border: 1px solid #16a34a;
+            line-height: 1.15;
+        ">
+            <div style="color:#15803d; font-size:0.75rem;">
+                {label}
+            </div>
+            <div style="color:#166534; font-size:1.05rem; font-weight:600;">
+                {value}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
 @st.cache_data(show_spinner=False)
 def render_map_regions(regions_geojson: dict, region_to_value: dict, indicator_label: str,group_col: str, height=680):
     if folium is None or regions_geojson is None:
@@ -945,7 +989,7 @@ with col_right:
 
 st.title("Upravljanje turističnih destinacij Slovenije – ključni podatki in kazalniki")
 
-st.markdown("***Podatki se nanašajo na leto 2024***")
+st.markdown("***Podatki se nanašajo na leto 2024 (v kolikor leto ni posebaj navedeno), leto 2025 in primerjalni podatki z 2019 (posebaj označeno)***")
 
 with st.sidebar:
     st.header("Nastavitve")
@@ -1022,8 +1066,8 @@ def render_view(view_title: str, group_col: str):
     st.caption(f"**Pogled:** {view_title}")
 
     meta = meta_cols | {group_col}
-    indicator_cols = [c for c in df.columns if c not in meta]
-
+    
+    indicator_cols = [c for c in df.columns if c not in meta and c not in market_cols]
 
     #Za regijo
     df_regions = df[df[group_col].notna()].copy()
@@ -1037,14 +1081,7 @@ def render_view(view_title: str, group_col: str):
     
 
     #za Celotno slovenijo
-    df_temp = df[df["Turistična regija"].notna()].copy()
-
-    df_slo_total = df_temp.copy()
-
-    for c in indicator_cols:
-        df_slo_total[c] = parse_numeric(df_slo_total[c])
-
-
+    df_slo_total = df.iloc[0]
 
 
     # mapping občina -> regija (normalizirano)
@@ -1092,6 +1129,12 @@ def render_view(view_title: str, group_col: str):
             column_config = make_localized_column_config(show_df),
             )
         
+        col1, col2, col3 = st.columns([1,2,1])
+        with col3:
+            green_metric(f" Celotna Slovenija - {map_indicator}", format_indicator_value_map(map_indicator, df_slo_total[map_indicator]))
+        
+
+        
     else:
         st.subheader("Povzetek izbranega območja")
         
@@ -1099,7 +1142,8 @@ def render_view(view_title: str, group_col: str):
         reg_total = aggregate_indicator_with_rules(reg_df, map_indicator, AGG_RULES, selected_region)
 
         # "Slovenija total" – smiselno le za seštevne indikatorje
-        sl_total = aggregate_indicator_with_rules(df_slo_total, map_indicator, AGG_RULES, None)
+        sl_total =df_slo_total[map_indicator]
+        
         
         share_si = np.nan
         if (not is_rate_like(map_indicator)) and sl_total and not np.isnan(sl_total) and sl_total != 0:
@@ -1117,8 +1161,11 @@ def render_view(view_title: str, group_col: str):
                 st.metric(map_indicator, f"{format_si_number(reg_total)}", f"{kpi_text}: {format_pct(share_si, 1)}")
             else:
                 st.metric(map_indicator, f"{format_indicator_value_map(map_indicator, reg_total)}")
-        with right_kpi:
             st.caption("Opomba: »Delež Slovenije« je prikazan za indikatorje, kjer se vrednosti seštevajo (ne za stopnje/indekse).")
+        with right_kpi:
+            green_metric(f" Celotna Slovenija - {map_indicator}", format_indicator_value_map(map_indicator, df_slo_total[map_indicator]))
+  
+       
 
         # dodatni KPI-ji (dashboard)
         if dashboard_mode and dash_inds:
@@ -1129,7 +1176,7 @@ def render_view(view_title: str, group_col: str):
                 v_reg = float(region_agg.loc[region_agg[group_col] == selected_region, ind].iloc[0])
 
                 # total Slovenije za ta indikator
-                v_slo = aggregate_indicator_with_rules(df_slo_total, ind, AGG_RULES, None)
+                v_slo = df_slo_total[ind]
 
                 # delež Slovenije (samo za seštevne indikatorje)
                 share = np.nan
@@ -1137,14 +1184,21 @@ def render_view(view_title: str, group_col: str):
                     share = (v_reg / v_slo) * 100.0
 
                 # prikaz
-                if not np.isnan(share):
-                    kpi_cols[idx].metric(
-                        ind,
-                        format_si_number(v_reg),
-                        f"Delež Slovenije: {format_pct(share, 1)}"
-                    )
-                else:
-                    kpi_cols[idx].metric(ind, format_indicator_value_map(ind, v_reg))
+                with kpi_cols[idx]:
+                    # spodaj: Slovenija total (zelena mini kartica)
+                    if v_slo is not None and not (isinstance(v_slo, float) and np.isnan(v_slo)):
+                        green_metric_small("Slovenija", format_indicator_value_map(ind, v_slo))
+                    # glavni KPI (regija)
+                    if not np.isnan(share):
+                        st.metric(
+                            ind,
+                            format_si_number(v_reg),
+                            f"Delež Slovenije: {format_pct(share, 1)}"
+                        )
+                    else:
+                        st.metric(ind, format_indicator_value_map(ind, v_reg))
+
+                    
 
     st.markdown("---")
     st.subheader("Zemljevid in razčlenitev")
