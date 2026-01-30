@@ -1154,7 +1154,7 @@ def render_view(view_title: str, group_col: str):
             kpi_text = "Indeks s povprečjem v Sloveniji"
             kpi_value = format_si_number(share_si, 1)
         else:
-            kpi_text = "Delež Slovenije"
+            kpi_text = "Delež v Sloveniji"
             kpi_value = format_pct(share_si, 1)
 
         left_kpi, right_kpi = st.columns([1.2, 1])
@@ -1163,7 +1163,7 @@ def render_view(view_title: str, group_col: str):
                 st.metric(map_indicator, f"{format_si_number(reg_total)}", f"{kpi_text}: {kpi_value}")
             else:
                 st.metric(map_indicator, f"{format_indicator_value_map(map_indicator, reg_total)}")
-            st.caption("Opomba: »Delež Slovenije« je prikazan za indikatorje, kjer se vrednosti seštevajo (ne za stopnje/indekse).")
+            st.caption("Opomba: »Delež v Sloveniji« je prikazan za indikatorje, kjer se vrednosti seštevajo (ne za stopnje/indekse).")
         with right_kpi:
             green_metric(f" Celotna Slovenija - {map_indicator}", format_indicator_value_map(map_indicator, df_slo_total[map_indicator]))
   
@@ -1195,7 +1195,7 @@ def render_view(view_title: str, group_col: str):
                         st.metric(
                             ind,
                             format_si_number(v_reg),
-                            f"Delež Slovenije: {format_pct(share, 1)}"
+                            f"Delež v Sloveniji: {format_pct(share, 1)}"
                         )
                     else:
                         st.metric(ind, format_indicator_value_map(ind, v_reg))
