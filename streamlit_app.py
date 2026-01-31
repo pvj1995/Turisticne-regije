@@ -105,7 +105,7 @@ AGG_RULES = {
     'Pritisk turizma na družbeni prostor (število stalnih ležišč / 100 prebivalcev)': ("wmean", 'Število prebivalcev (H2/2024)'),
     'Gostota turizma': ("wmean", 'Površina območja (km2)'),
     "Intenzivnost turizma (število nočitev na dan / 100 prebivalcev)": ("wmean", "Število prebivalcev (H2/2024)"),
-    "Delovno aktivni v  turizmu (OECD/WTO)": ("sum", None),
+    "Delovno aktivno prebivalstvo v turizmu (OECD/WTO)": ("sum", None),
     "Število zaposl. in samozaposl. v aktivnih podjetjih v Gostinstvu (I)": ("sum", None),
     "Zaposleni v Gostinstvu (I) v registr.podjetjih in s.p.": ("sum", None),
     "Zaposleni v nastan.dejav. (I55) v registr.podjetjih in s.p.": ("sum", None),
@@ -168,7 +168,7 @@ AGG_RULES = {
     "Delež naseljenih stanovanj": ("wmean", "Število vseh stanovanj"),
     "GINI Indeks - sezonskost prenočitev - 2024": ("wmean", 'Prenočitve - povprečno število prenočitev na mesec'),
     "Delež vseh prenočitev - Domači trg": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
-    "Delež vseh prenočitev - DACH trgi": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
+    "Delež vseh prenočitev - DACH trgi (nemško govoreči trgi: D, A in CH)": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
     "Delež vseh prenočitev - Italijanski trg": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
     "Delež vseh prenočitev - Vzh.evropski trgi (PL,CZ,HU,SK,LIT,LTV,EST,RU,UKR)": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
     "Delež vseh prenočitev - Drugi zah.in sev. evropski trgi (ES,P, F,Benelux, Skandinavske države)": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
@@ -1006,14 +1006,14 @@ with col_right:
 
 st.title("Upravljanje turističnih destinacij Slovenije – ključni podatki in kazalniki")
 
-st.markdown("***Podatki se nanašajo na leto 2024 (v kolikor leto ni posebej navedeno), leto 2025 in primerjalni podatki z 2019 (posebej označeno)***")
+st.markdown("***Podatki in kazalniki se nanašajo na leto 2024 (v kolikor leto ni posebej navedeno), leto 2025 in primerjalni podatki z 2019 (posebej označeno)***")
 
 with st.sidebar:
     st.header("Nastavitve")
     xlsx_file = st.file_uploader("Naloži Excel (če ne uporabiš privzetega)", type=["xlsx"])
     geojson_file = st.file_uploader("Naloži GeoJSON občin (opcijsko)", type=["json", "geojson"])
     st.divider()
-    dashboard_mode = st.checkbox("Dashboard način (več indikatorjev)", value=True)
+    dashboard_mode = st.checkbox("Dashboard način (več kazalnikov)", value=True)
 
 
 # Load data
@@ -1051,7 +1051,7 @@ market_labels = [c.replace(MARKET_PREFIX, "").strip() for c in market_cols]
 
 MARKET_COLOR_MAP = {
     "Domači trg": "#1f77b4",
-    "DACH trgi": "#ff7f0e",
+    "DACH trgi (nemško govoreči trgi: D, A in CH)": "#ff7f0e",
     "Italijanski trg": "#2ca02c",
     "Vzh.evropski trgi (PL,CZ,HU,SK,LIT,LTV,EST,RU,UKR)": "#d62728",  
     "Drugi zah.in sev. evropski trgi (ES,P, F,Benelux, Skandinavske države)": "#9467bd",  
@@ -1109,13 +1109,14 @@ def render_view(view_title: str, group_col: str):
     with top_left:
         selected_region = st.selectbox(group_col, regions_with_all, index=0, key=f"sel_group_{group_col}")
     with top_right:
-        map_indicator = st.selectbox("Indikator za zemljevid", indicator_cols, index=0, key=f"sel_ind_{group_col}")
+        map_indicator = st.selectbox("Kazalnik za zemljevid", indicator_cols, index=0, key=f"sel_ind_{group_col}")
+        print(len(indicator_cols))
         show_shared_warning_if_needed_indicator(map_indicator)
 
     dash_inds = []
     if dashboard_mode:
         default_inds = indicator_cols[:0] if len(indicator_cols) >= 4 else indicator_cols
-        dash_inds = st.multiselect("Indikatorji za dashboard (do 6)", indicator_cols, default=default_inds, max_selections=6, placeholder= "Izberi indikator", key=f"dash_{group_col}")
+        dash_inds = st.multiselect("Kazalniki za dashboard (do 6)", indicator_cols, default=default_inds, max_selections=6, placeholder= "Izberi kazalnik", key=f"dash_{group_col}")
 
     # agregati regij
     agg_needed = [map_indicator] + [i for i in dash_inds if i != map_indicator]
@@ -1179,7 +1180,7 @@ def render_view(view_title: str, group_col: str):
                 st.metric(map_indicator, f"{format_si_number(reg_total)}", f"{kpi_text_main}: {kpi_value_main}")
             else:
                 st.metric(map_indicator, f"{format_indicator_value_map(map_indicator, reg_total)}")
-            st.caption("Opomba: »Delež v Sloveniji« je prikazan za indikatorje, kjer se vrednosti seštevajo (ne za stopnje/indekse).")
+            st.caption("Opomba: »Delež v Sloveniji« je prikazan za kazalnike, kjer se vrednosti seštevajo (ne za stopnje/indekse).")
         with right_kpi:
             green_metric(f" Celotna Slovenija - {map_indicator}", format_indicator_value_map(map_indicator, df_slo_total[map_indicator]))
   
