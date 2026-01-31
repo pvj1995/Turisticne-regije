@@ -24,30 +24,30 @@ except Exception:
     gpd = None
 
 
-def require_password():
-    if "APP_PASSWORD" not in st.secrets:
-        st.error("Manjka APP_PASSWORD v Streamlit Secrets.")
-        st.stop()
+# def require_password():
+#     if "APP_PASSWORD" not in st.secrets:
+#         st.error("Manjka APP_PASSWORD v Streamlit Secrets.")
+#         st.stop()
 
-    if st.session_state.get("authenticated", False):
-        return
+#     if st.session_state.get("authenticated", False):
+#         return
 
-    st.title("Prijava")
+#     st.title("Prijava")
 
-    with st.form("login_form", clear_on_submit=False):
-        pwd = st.text_input("Geslo", type="password")
-        submitted = st.form_submit_button("Vstopi")
+#     with st.form("login_form", clear_on_submit=False):
+#         pwd = st.text_input("Geslo", type="password")
+#         submitted = st.form_submit_button("Vstopi")
 
-        if submitted:
-            if hmac.compare_digest(pwd, st.secrets["APP_PASSWORD"]):
-                st.session_state["authenticated"] = True
-                st.rerun()
-            else:
-                st.error("Napačno geslo.")
+#         if submitted:
+#             if hmac.compare_digest(pwd, st.secrets["APP_PASSWORD"]):
+#                 st.session_state["authenticated"] = True
+#                 st.rerun()
+#             else:
+#                 st.error("Napačno geslo.")
 
-    st.stop()
+#     st.stop()
 
-require_password()
+# require_password()
 
 
 DATA_XLSX_DEFAULT = "Skupna tabela občine.xlsx"
@@ -1510,6 +1510,6 @@ with tab_trgi:
 st.image("footer_logo.jpg", width= 200)
 
 st.caption("Viri podatkov: SURS, AJPES, Narodna Banka Slovenije, Slovenska Turistična Organizacija, Lastna obdelava, izračuni in dodatne ocene manjkajočih podatkov - Hosting Management & Consulting d.o.o.")
-st.caption("Naročnik projekta: Ministrstvo za gospodarstvo turizem in šport RS")
-st.caption("Izvajalec projekta: Hosting Management & Consulting d.o.o., December 2025")
+st.caption("Naročnik projekta analize destinacijskih podatkov za leto 2024: Ministrstvo za gospodarstvo, turizem in šport RS, 2025")
+st.caption("Avtor, izvajalec in skrbnik aplikacije: Hosting Management & Consulting d.o.o., kontakt: info@hosting.si, tel. +386 (0)41 514 020")
 st.markdown("---")
