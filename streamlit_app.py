@@ -1165,19 +1165,18 @@ def render_view(view_title: str, group_col: str):
         share_si = np.nan
         if (not is_rate_like(map_indicator)) and sl_total and not np.isnan(sl_total) and sl_total != 0:
             share_si = (reg_total / sl_total) * 100.0
-        print(share_si)
         # KPI: prvi je indikator + delež SLO
         if map_indicator in INDIKATORJI_Z_INDEKSI:
-            kpi_text = "Indeks s povprečjem v Sloveniji"
-            kpi_value = format_si_number(share_si, 1)
+            kpi_text_main = "Indeks s povprečjem v Sloveniji"
+            kpi_value_main = format_si_number(share_si, 1)
         else:
-            kpi_text = "Delež v Sloveniji"
-            kpi_value = format_pct(share_si, 1)
+            kpi_text_main = "Delež v Sloveniji"
+            kpi_value_main = format_pct(share_si, 1)
 
         left_kpi, right_kpi = st.columns([1.2, 1])
         with left_kpi:
             if not np.isnan(share_si): 
-                st.metric(map_indicator, f"{format_si_number(reg_total)}", f"{kpi_text}: {kpi_value}")
+                st.metric(map_indicator, f"{format_si_number(reg_total)}", f"{kpi_text_main}: {kpi_value_main}")
             else:
                 st.metric(map_indicator, f"{format_indicator_value_map(map_indicator, reg_total)}")
             st.caption("Opomba: »Delež v Sloveniji« je prikazan za indikatorje, kjer se vrednosti seštevajo (ne za stopnje/indekse).")
@@ -1205,11 +1204,11 @@ def render_view(view_title: str, group_col: str):
                 # prikaz
                 with kpi_cols[idx]:
                     if ind in INDIKATORJI_Z_INDEKSI:
-                        kpi_text = "Indeks s povprečjem v Sloveniji"
-                        kpi_value = format_si_number(share_si, 1)
+                        kpi_text_dashboard = "Indeks s povprečjem v Sloveniji"
+                        kpi_value_dashboard = format_si_number(share, 1)
                     else:
-                        kpi_text = "Delež v Sloveniji"
-                        kpi_value = format_pct(share_si, 1)
+                        kpi_text_dashboard = "Delež v Sloveniji"
+                        kpi_value_dashboard = format_pct(share, 1)
                     # spodaj: Slovenija total (zelena mini kartica)
                     if v_slo is not None and not (isinstance(v_slo, float) and np.isnan(v_slo)):
                         green_metric_small("Slovenija", format_indicator_value_map(ind, v_slo))
@@ -1218,7 +1217,7 @@ def render_view(view_title: str, group_col: str):
                         st.metric(
                             ind,
                             format_si_number(v_reg),
-                            f"{kpi_text}: {kpi_value}"
+                            f"{kpi_text_dashboard}: {kpi_value_dashboard}"
                         )
                     else:
                         st.metric(ind, format_indicator_value_map(ind, v_reg))
