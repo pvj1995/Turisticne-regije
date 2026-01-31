@@ -177,6 +177,23 @@ AGG_RULES = {
     "Delež vseh prenočitev - Vsi drugi tuji trgi": ("wmean", "Prenočitve turistov SKUPAJ - 2024"),
 }
 
+INDIKATORJI_Z_INDEKSI = {
+    'PDB turistov SKUPAJ - 2024',
+    'PDB turistov Domači - 2024',
+    'PDB turistov Tuji - 2024',
+    'PDB turistov SKUPAJ - 2025',
+    'PDB turistov Domači - 2025',
+    'PDB turistov Tuji - 2025',
+    'Pritisk turizma na družbeni prostor (število stalnih ležišč / 100 prebivalcev)',
+    'Gostota turizma',
+    "Intenzivnost turizma (število nočitev na dan / 100 prebivalcev)",
+    "Dodana vrednost/zaposl. reg.podjetij Gostinstvu (I)",
+    "Dodana vrednost/zaposl. V reg.podjetjih v nast.dejav. (I 55)",
+    "Ocenjeni prihodki iz nast. dejav. na prenočitev",
+    "Ocenjeni prihodki iz nastan. dej. na razpoložljivo sobo (enoto)",
+    "Poraba el.energ. v kWh na realiz. 1000 EUR prihodka v Gostinstvu (I)"
+}
+
 INDIKATORJI_Z_OPOMBO = {
     "Zaposleni v Gostinstvu (I) v registr.podjetjih in s.p.",
     "Zaposleni v nastan.dejav. (I55) v registr.podjetjih in s.p.",
@@ -1148,9 +1165,9 @@ def render_view(view_title: str, group_col: str):
         share_si = np.nan
         if (not is_rate_like(map_indicator)) and sl_total and not np.isnan(sl_total) and sl_total != 0:
             share_si = (reg_total / sl_total) * 100.0
-
+        print(share_si)
         # KPI: prvi je indikator + delež SLO
-        if "PDB" in map_indicator or "turizma" in map_indicator:
+        if map_indicator in INDIKATORJI_Z_INDEKSI:
             kpi_text = "Indeks s povprečjem v Sloveniji"
             kpi_value = format_si_number(share_si, 1)
         else:
@@ -1187,6 +1204,12 @@ def render_view(view_title: str, group_col: str):
 
                 # prikaz
                 with kpi_cols[idx]:
+                    if map_indicator in INDIKATORJI_Z_INDEKSI:
+                        kpi_text = "Indeks s povprečjem v Sloveniji"
+                        kpi_value = format_si_number(share_si, 1)
+                    else:
+                        kpi_text = "Delež v Sloveniji"
+                        kpi_value = format_pct(share_si, 1)
                     # spodaj: Slovenija total (zelena mini kartica)
                     if v_slo is not None and not (isinstance(v_slo, float) and np.isnan(v_slo)):
                         green_metric_small("Slovenija", format_indicator_value_map(ind, v_slo))
@@ -1195,7 +1218,7 @@ def render_view(view_title: str, group_col: str):
                         st.metric(
                             ind,
                             format_si_number(v_reg),
-                            f"Delež v Sloveniji: {format_pct(share, 1)}"
+                            f"{kpi_text}: {kpi_value}"
                         )
                     else:
                         st.metric(ind, format_indicator_value_map(ind, v_reg))
@@ -1256,7 +1279,15 @@ def render_view(view_title: str, group_col: str):
                 "Občina": reg_df["Občine"].astype(str),
                 map_indicator: reg_df[map_indicator].astype(float).apply(lambda x: format_indicator_value_tables(map_indicator, x))
             })
-            
+
+            if (reg_total and not np.isnan(reg_total) and reg_total != 0 and not is_rate_like(map_indicator)):
+                if map_indicator in INDIKATORJI_Z_INDEKSI:
+                    cfg_df[f"Indeks {view_title}"] = round(((cfg_df[map_indicator] / reg_total)*100), 1)
+                else:
+                    cfg_df[f"Delež {view_title} (%)"] = round(((cfg_df[map_indicator] / reg_total)), 3)
+            else:
+                pass
+
             cfg = make_localized_column_config(cfg_df)
             
             old_key= next(iter(cfg))
@@ -1266,10 +1297,15 @@ def render_view(view_title: str, group_col: str):
                 "Občina": reg_df["Občine"].astype(str),
                 "Vrednost": reg_df[map_indicator].astype(float).apply(lambda x: format_indicator_value_tables(map_indicator, x))
             })
+
             if (reg_total and not np.isnan(reg_total) and reg_total != 0 and not is_rate_like(map_indicator)):
-                tbl["Delež v regiji (%)"] = round(((tbl["Vrednost"] / reg_total) * 100.0), 1)
+                if map_indicator in INDIKATORJI_Z_INDEKSI:
+                    tbl[f"Indeks {view_title}"] = round(((tbl["Vrednost"] / reg_total)*100), 1)
+                else:
+                    tbl[f"Delež {view_title} (%)"] = round(((tbl["Vrednost"] / reg_total)), 3)
             else:
                 pass
+
 
             tbl = tbl.sort_values("Vrednost", ascending=False, na_position="last")
 
@@ -1280,7 +1316,7 @@ def render_view(view_title: str, group_col: str):
                 hide_index=True,
                 column_config = cfg,
                 )
-        st.caption("Opomba: »Delež v regiji (%)« je prikazan za indikatorje, kjer se vrednosti seštevajo (ne za stopnje/indekse).")
+        st.caption(f"Opomba: »Delež {view_title} (%)« je prikazan za indikatorje, kjer se vrednosti seštevajo (ne za stopnje/indekse).")
 
 def render_market_structure(view_title: str, group_col: str, market_cols: list[str], market_labels: list[str]):
     st.caption(f"**Pogled:** {view_title}")
