@@ -24,30 +24,30 @@ except Exception:
     gpd = None
 
 
-def require_password():
-    if "APP_PASSWORD" not in st.secrets:
-        st.error("Manjka APP_PASSWORD v Streamlit Secrets.")
-        st.stop()
+# def require_password():
+#     if "APP_PASSWORD" not in st.secrets:
+#         st.error("Manjka APP_PASSWORD v Streamlit Secrets.")
+#         st.stop()
 
-    if st.session_state.get("authenticated", False):
-        return
+#     if st.session_state.get("authenticated", False):
+#         return
 
-    st.title("Prijava")
+#     st.title("Prijava")
 
-    with st.form("login_form", clear_on_submit=False):
-        pwd = st.text_input("Geslo", type="password")
-        submitted = st.form_submit_button("Vstopi")
+#     with st.form("login_form", clear_on_submit=False):
+#         pwd = st.text_input("Geslo", type="password")
+#         submitted = st.form_submit_button("Vstopi")
 
-        if submitted:
-            if hmac.compare_digest(pwd, st.secrets["APP_PASSWORD"]):
-                st.session_state["authenticated"] = True
-                st.rerun()
-            else:
-                st.error("Napačno geslo.")
+#         if submitted:
+#             if hmac.compare_digest(pwd, st.secrets["APP_PASSWORD"]):
+#                 st.session_state["authenticated"] = True
+#                 st.rerun()
+#             else:
+#                 st.error("Napačno geslo.")
 
-    st.stop()
+#     st.stop()
 
-require_password()
+# require_password()
 
 
 DATA_XLSX_DEFAULT = "Skupna tabela občine.xlsx"
@@ -191,7 +191,22 @@ INDIKATORJI_Z_INDEKSI = {
     "Dodana vrednost/zaposl. V reg.podjetjih v nast.dejav. (I 55)",
     "Ocenjeni prihodki iz nast. dejav. na prenočitev",
     "Ocenjeni prihodki iz nastan. dej. na razpoložljivo sobo (enoto)",
-    "Poraba el.energ. v kWh na realiz. 1000 EUR prihodka v Gostinstvu (I)"
+    "Poraba el.energ. v kWh na realiz. 1000 EUR prihodka v Gostinstvu (I)",
+    'Povprečna starost prebivalcev',
+    "Stroški dela na zaposl. na leto v reg. podj. v Gostinski (I) dejavnosti",
+    "Dodana vrednost/zaposl. V reg.podjetjih v nast.dejav. (I 55)",
+    "Stroški dela na zaposl. na leto v reg. podj. v nast.gost. (I 55) dejavnosti",
+    "Celotni prihodki v nastan. dejav. na prenočitev",
+    "Ocenjeni prihodki iz nast. dejav. na prenočitev",
+    "Ocenjeni prihodki iz nastan. dej. na razpoložljivo sobo (enoto)",
+    "Ocenjeni prihodki iz nast.dej. na prodano sobo (ned.enoto)",
+    "Poraba el.energ. v kWh na realiz. 1000 EUR prihodka v Gostinstvu (I)",
+    "Skupaj neto prejeti dohodek povp. na prebivalca",
+    "Neto prejeti dohodek iz dela, povp. na preb.",
+    "Neto prejeti dohodek iz premoženja, kapitala, idr.povp. na preb.",
+    "Povprečna mesečna neto  plača/zaposl. osebo (EUR)",
+    "Povprečna neto plača izplačana na zaposl. osebo v Gostinstvu (I)",
+    
 }
 
 INDIKATORJI_Z_OPOMBO = {
@@ -240,6 +255,36 @@ INDIKATORJI_Z_OPOMBO = {
     "Poraba el.energ. v kWh na realiz. 1000 EUR prihodka v Gostinstvu (I)"
 }
 
+INDIKATORJI_Z_VALUTO = {
+    "Prihodki reg.podjetij in s.p. v Gostinstvu (I)",
+    "Dodana vrednost reg.podjetij v Gostinstvu (I)",
+    "Dodana vrednost/zaposl. reg.podjetij Gostinstvu (I)",
+    "Ocenjeni stroški dela v reg. podj. v Gostinski (I) dejavnosti",
+    "Stroški dela na zaposl. na leto v reg. podj. v Gostinski (I) dejavnosti",
+    "Povprečna neto plača izplačana na zaposl. osebo v Gostinstvu (I)",
+    "EBITDA v reg.podjetjih in s.p. v Gostinstvu (I)",
+    "Čisti dobiček/izguba v reg. podj. in s.p. v Gostinstvu (I)",
+    "Sredstva v reg. Podjetjih in s.p. v Gostinstvu (I)",
+    "Kapital v reg. Podjetjih in s.p. v Gostinstvu (I)",
+    "Prihodki reg.podjetij in s.p. v nastanitveni dejav. (I 55)",
+    "Dodana vrednost reg.podjetij v nastanitveni dejav. (I 55)",
+    "Dodana vrednost/zaposl. V reg.podjetjih v nast.dejav. (I 55)",
+    "Ocenjeni stroški dela v reg. podj. v nastan.gost. (I 55) dejavnosti",
+    "Stroški dela na zaposl. na leto v reg. podj. v nast.gost. (I 55) dejavnosti",
+    "EBITDA v reg.podjetjih in s.p. v nastanitveni dejav. (I 55)",
+    "Čisti dobiček/izguba v reg. podj. v nastanitveni dejav. (I 55)",
+    "Sredstva v reg. Podjetjih in s.p. v nastanitveni dejav. (I 55)",
+    "Kapital v reg. Podjetjih in s.p. v nastanitveni dejav. (I 55)",
+    "Celotni prihodki v nastan. dejav. na prenočitev",
+    "Ocenjeni prihodki iz nast. dejav. na prenočitev",
+    "Ocenjeni prihodki iz nastan. dej. na razpoložljivo sobo (enoto)",
+    "Ocenjeni prihodki iz nast.dej. na prodano sobo (ned.enoto)",
+    "Ocena skupne ekonomske velikosti kmetij.gospodarstev",
+    "Skupaj neto prejeti dohodek povp. na prebivalca",
+    "Neto prejeti dohodek iz dela, povp. na preb.",
+    "Neto prejeti dohodek iz premoženja, kapitala, idr.povp. na preb.",
+    "Povprečna mesečna neto  plača/zaposl. osebo (EUR)",
+}
 SKUPNO_OPOZORILO_AGREGACIJA = {
     "type": "warning",
     "title": "Glej opozorilo spodaj glede interpretacije tega kazalnika",
@@ -247,6 +292,7 @@ SKUPNO_OPOZORILO_AGREGACIJA = {
         "Opozorilo oz. razkritje avtorja izračunov kazalnikov: pri izračunih ekonomskih in poslovnih kazalnikov, pri katerih se kombinirajo finančni podatki iz bilanc podjetij in s.p. (vir AJPES) in fizični podatki o številu prenočitev turistov, sob, ležišč ali drugi fizični podatki o določenih količinah kot so poraba energije v kWh, ipd.(vir: SURS), lahko prihaja do nerealnih oz. delno popačenih vrednosti v primerih, kjer so sedeži družb, ki realizirajo finančne kategorije poslovanja v drugih občinah oz. regijah, kot so realizirane prenočitve oz. registrirana ležišča ali sobe, ki jih upravljajo in realizirajo določene količinske rezultate. Takšen primer je recimo: sedež družbe Sava Turizem d.d. je v Ljubljani, kjer so prikazani prihodki in druge poslovne kategorije te družbe, medtem, ko so prenočitve, sobe, ležišča, količinska poraba energije, ipd. prikazani v dejanski občini, kjer delujejo nastanitveni gostinski obrati v lasti in upravljanju te družbe, ipd.. Prav tako v takšnih primerih niso prikazane realne poslovno-finančne kategorije, ki jih realizirajo takšne družbe v občinah oz. regijah, kjer ti učinki dejansko nastajajo (na območjih, kjer nastajajo učinki so torej prikazane poslovno-finančne kategorije nižje od realnih), temveč se pojavljajo v višjih zneskih v enakih kategorijah v občinah oz. regijah kjer so registrirani sedeži takšnih družb oz. podjetij ali s.p. (tam pa so torej prikazane finančne kategorije višje od realnih). Kljub temu je smiselno opazovati te poslovno-finančne kategorije (ki so edine javno na voljo), ob zavedanju tovrstnega popačenja v enakih oz. podobnih primerih. Poslovno finančni kazalniki pa se seveda izravnajo in so realno prikazani na ravni celotne Slovenije."
     )
 }
+
 
 def find_excel_file():
     # 1) poskusi točno ime
@@ -279,10 +325,40 @@ def normalize_name(s: str) -> str:
     return s
 
 def is_rate_like(col: str) -> bool:
-    c = col.lower()
+    c = col
     keywords = [
-        "%", "delež", "/1000", "povpre", "indeks", "stopnja", "na 1", "na 1000", "na preb",
-        "kg/preb", "€/preb", "na km2", "gostota", "marža", "povprečna letna zasedenost", "cenjena povp", "donosnost", "dobičkovnost", "gini","rast števila prenočitev"
+        'Naravni prirast /1000 prebival.',
+        'Delež tujih prenočitev - 2019',
+        'Delež tujih prenočitev - 2024',
+        'Delež tujih prenočitev - 2025',
+        'Rast števila prenočitev 2024/2019 - SKUPAJ',
+        'Rast števila prenočitev 2024/2019 - Domači',
+        'Rast števila prenočitev 2024/2019 - Tuji',
+        'Rast števila prenočitev 2025/2019 - SKUPAJ',
+        'Rast števila prenočitev 2025/2019 - Domači',
+        'Rast števila prenočitev 2025/2019 - Tuji',
+        'Delež stalnih ležišč v Hotelih ipd.',
+        'Povprečna letna zasedenost staln. ležišč',
+        'Ocenjena povp. Letna zased. sob (nedeljivih enot)',
+        "EBITDA marža v reg.podjetjih in s.p. v Gostinstvu (I)",
+        "Donosnost sredstev v reg. podjetjih in s.p. v Gostinstvu (I)",
+        "Donosnost kapitala v reg. podjetjih in s.p. v Gostinstvu (I)",
+        "Dobičkovnost prihodkov v podjetjih in s.p. v Gostinstvu (I)",
+        "Delež stroškov dela v prihodkih v reg. podj. v nast.gost.dej. (I 55)",
+        "Delež stroškov dela v dod vredn. v reg. podj. v nast.gost.dej. (I 55)",
+        "EBITDA marža v reg.podjetjih v nastanitveni dejav. (I 55)",
+        "Donosnost sredstev v nastanitveni dejav. (I 55)",
+        "Donosnost kapitala v nastanitveni dejav. (I 55)",
+        "Dobičkovnost prihodkov v nastanitveni dejav. (I 55)",
+        "Indeks neto plača v Gostinstvu (I) /pvp. plača v vseh dejavnostih",
+        "Število izdanih gradbenih dovoljenj/1000 prebivalcev",
+        "Delež naseljenih stanovanj od vseh razp.",
+        "Komunalni odpadki, zbrani  z javnim odvozom (kg/prebivalca)",
+        "Štev.dijakov in študentov višjih strok. in visokošolsk.progr./1000 preb.",
+        "Delež naseljenih stanovanj",
+        "Delež delovno aktivnih v turizmu (OECD/WTO)",
+        "Delež stroškov dela v prihodkih v reg. podj. v Gostinstvu (I)",
+        "Delež stroškov dela v dod vredn. v reg. podj. v Gostinstvu (I)",
     ]
     return any(k in c for k in keywords)
 
@@ -360,8 +436,10 @@ def format_indicator_value_map(indicator: str, x):
     if is_percent_like(indicator):
         return format_pct(float(x) * 100.0, 1)
     #GINI indeks izjema
-    if "GINI" in indicator:
+    elif "GINI" in indicator:
         return format(round(x,2), ".2f")
+    elif indicator in INDIKATORJI_Z_VALUTO:
+        return f"{format_si_number(x)} €"
     # vse ostalo ostane normalno število
     return format_si_number(x)
 
@@ -762,6 +840,8 @@ def make_localized_column_config(df: pd.DataFrame):
         if pd.api.types.is_numeric_dtype(df[c]):
             if is_percent_like(c):
                 cfg[c] = st.column_config.NumberColumn(format="percent")
+            elif c in INDIKATORJI_Z_VALUTO:
+                cfg[c] = st.column_config.NumberColumn(format="euro")
             else:
                 cfg[c] = st.column_config.NumberColumn(format="localized")
     return cfg
@@ -991,7 +1071,7 @@ def load_geojson_from_upload_or_file(uploaded, default_path: Path):
 # ---------------------------
 # UI
 # ---------------------------
-st.set_page_config(page_title="Upravljanje turističnih destinacij Slovenije – ključni podatki in kazalniki", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Upravljanje turističnih destinacij Slovenije© \n Ključni podatki in kazalniki", layout="wide", initial_sidebar_state="collapsed")
 
 col_left, col_center, col_right = st.columns([1, 6, 3])
 
@@ -1002,11 +1082,59 @@ with col_center:
     ""
 
 with col_right:
-    st.image("Top_right_logo.jpg", width= 350)
+    st.image("Top_right_logo.jpg", width= 300)
 
-st.title("Upravljanje turističnih destinacij Slovenije – ključni podatki in kazalniki")
+st.markdown(
+    """
+    <style>
+    .app-title {
+        font-size: 42px;
+        font-weight: 800;
+        line-height: 1.1;
+        margin-bottom: 4px;
+    }
+    .app-title .copyright {
+        font-weight: 400;
+        font-size: 0.6em;
+        vertical-align: super;
+        }
+    .app-subtitle {
+        font-size: 36px;
+        font-style: italic;
+        font-weight: 500;
+        color: #6b6b6b;
+        margin-bottom: 8px;
+    }
+    .app-description {
+        font-size: 16px;
+        color: #6b6b6b;
+        line-height: 1.4;
+        max-width: 1200px;
+    }
+    </style>
 
-st.markdown("***Podatki in kazalniki se nanašajo na leto 2024 (v kolikor leto ni posebej navedeno), leto 2025 in primerjalni podatki z 2019 (posebej označeno)***")
+    <div class="app-title">
+        Upravljanje turističnih destinacij Slovenije  <span class ="copyright">©</span>
+    </div>
+    <div class="app-subtitle">
+        Ključni podatki in kazalniki
+    </div>
+    <div class="app-description">
+        Preko 100 podatkov in strukturiranih tržnih, poslovnih, ekonomskih,
+        družbenih in okoljskih kazalnikov za vsako od 4 ravni ožje in širše zaokroženih
+        turističnih območij: Občine, Vodilne turistične destinacije, Perspektivne
+        turistične destinacije, Turistične regije in Makro destinacije slovenskega turizma.
+        Medsebojne primerjave in konkurenčno uvrščanje posameznih območij, primerjave s
+        kazalniki na ravni Slovenije. Diagnostika stanja v razvoju in delovanju turizma
+        na ravni destinacij. Stalna nadgradnja z aktualnimi podatki, novimi kazalniki in prikazi,
+        tudi s pomočjo umetne inteligence.
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+st.markdown("<hr style='margin-top:20px;margin-bottom:20px;'>", unsafe_allow_html=True)
+st.markdown("***Podatki in kazalniki se nanašajo na leto 2024 (v kolikor leto ni posebej navedeno), leto 2025 in primerjalne podatke z letom 2019 (posebej označeno)***")
 
 with st.sidebar:
     st.header("Nastavitve")
@@ -1110,7 +1238,6 @@ def render_view(view_title: str, group_col: str):
         selected_region = st.selectbox(group_col, regions_with_all, index=0, key=f"sel_group_{group_col}")
     with top_right:
         map_indicator = st.selectbox("Kazalnik za zemljevid", indicator_cols, index=0, key=f"sel_ind_{group_col}")
-        print(len(indicator_cols))
         show_shared_warning_if_needed_indicator(map_indicator)
 
     dash_inds = []
@@ -1177,7 +1304,7 @@ def render_view(view_title: str, group_col: str):
         left_kpi, right_kpi = st.columns([1.2, 1])
         with left_kpi:
             if not np.isnan(share_si): 
-                st.metric(map_indicator, f"{format_si_number(reg_total)}", f"{kpi_text_main}: {kpi_value_main}")
+                st.metric(map_indicator, f"{format_indicator_value_map(map_indicator,reg_total)}", f"{kpi_text_main}: {kpi_value_main}")
             else:
                 st.metric(map_indicator, f"{format_indicator_value_map(map_indicator, reg_total)}")
             st.caption("Opomba: »Delež v Sloveniji« je prikazan za kazalnike, kjer se vrednosti seštevajo (ne za stopnje/indekse).")
@@ -1217,7 +1344,7 @@ def render_view(view_title: str, group_col: str):
                     if not np.isnan(share):
                         st.metric(
                             ind,
-                            format_si_number(v_reg),
+                            format_indicator_value_map(ind, v_reg),
                             f"{kpi_text_dashboard}: {kpi_value_dashboard}"
                         )
                     else:
