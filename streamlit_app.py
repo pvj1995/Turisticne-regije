@@ -1006,7 +1006,7 @@ with col_right:
 
 st.title("Upravljanje turističnih destinacij Slovenije – ključni podatki in kazalniki")
 
-st.markdown("***Podatki se nanašajo na leto 2024 (v kolikor leto ni posebaj navedeno), leto 2025 in primerjalni podatki z 2019 (posebaj označeno)***")
+st.markdown("***Podatki se nanašajo na leto 2024 (v kolikor leto ni posebej navedeno), leto 2025 in primerjalni podatki z 2019 (posebej označeno)***")
 
 with st.sidebar:
     st.header("Nastavitve")
@@ -1140,7 +1140,7 @@ def render_view(view_title: str, group_col: str):
 
         st.dataframe(
             show_df,
-            use_container_width=True,
+            width="stretch",
             height=260,
             hide_index=True,
             column_config = make_localized_column_config(show_df),
@@ -1204,7 +1204,7 @@ def render_view(view_title: str, group_col: str):
 
                 # prikaz
                 with kpi_cols[idx]:
-                    if map_indicator in INDIKATORJI_Z_INDEKSI:
+                    if ind in INDIKATORJI_Z_INDEKSI:
                         kpi_text = "Indeks s povprečjem v Sloveniji"
                         kpi_value = format_si_number(share_si, 1)
                     else:
@@ -1265,7 +1265,7 @@ def render_view(view_title: str, group_col: str):
 
             st.dataframe(
                 t,
-                use_container_width=True,
+                width="stretch",
                 height=680,
                 hide_index=True,
                 column_config = cfg,
@@ -1311,13 +1311,20 @@ def render_view(view_title: str, group_col: str):
 
             st.dataframe(
                 tbl,
-                use_container_width=True,
+                width="stretch",
                 height=680,
                 hide_index=True,
                 column_config = cfg,
                 )
-        st.caption(f"Opomba: »Delež {view_title} (%)« je prikazan za indikatorje, kjer se vrednosti seštevajo (ne za stopnje/indekse).")
-
+            if (reg_total and not np.isnan(reg_total) and reg_total != 0 and not is_rate_like(map_indicator)):
+                if view_title == "Turistične regije":
+                    st.caption(f"**Opomba:** Delež posamezne občine znotraj opazovane turistične regije (%) je prikazan za kazalnike, kjer se vrednosti seštevajo. Primerjalni indeks vrednosti kazalnika posamezne občine v primerjavi z vrednostjo enakega kazalnika na ravni opazovane turistične regije pa je prikazan za kompleksnejše oz. izračunane kazalnike, katerih vrednosti se ne seštevajo. ")
+                elif view_title == "Vodilne destinacije":
+                    st.caption("**Opomba:** Delež posamezne občine znotraj opazovane vodilne destinacije (%) je prikazan za kazalnike, kjer se vrednosti seštevajo. Primerjalni indeks vrednosti kazalnika posamezne občine v primerjavi z vrednostjo enakega kazalnika na ravni opazovane vodilne destinacije pa je prikazan za kompleksnejše oz. izračunane kazalnike, katerih vrednosti se ne seštevajo. ")
+                elif view_title == "Makrodestinacije":
+                    st.caption("**Opomba:** Delež posamezne občine znotraj opazovane makro destinacije (%) je prikazan za kazalnike, kjer se vrednosti seštevajo. Primerjalni indeks vrednosti kazalnika posamezne občine v primerjavi z vrednostjo enakega kazalnika na ravni opazovane makro destinacije pa je prikazan za kompleksnejše oz. izračunane kazalnike, katerih vrednosti se ne seštevajo. ")
+                elif view_title == "Perspektivne destinacije":
+                    st.caption("**Opomba:** Delež posamezne občine znotraj opazovane perspektivne destinacije (%) je prikazan za kazalnike, kjer se vrednosti seštevajo. Primerjalni indeks vrednosti kazalnika posamezne občine v primerjavi z vrednostjo enakega kazalnika na ravni opazovane perspektivne destinacije pa je prikazan za kompleksnejše oz. izračunane kazalnike, katerih vrednosti se ne seštevajo. ")    
 def render_market_structure(view_title: str, group_col: str, market_cols: list[str], market_labels: list[str]):
     st.caption(f"**Pogled:** {view_title}")
     st.subheader("Struktura prenočitev po trgih")
@@ -1430,14 +1437,14 @@ def render_market_structure(view_title: str, group_col: str, market_cols: list[s
             )
 
 
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
 
         with c2:
             st.markdown("**Tabela**")
             t = struct.copy()
             t["Delež (%)"] = (t["Delež_norm"] * 100).round(1)
             t = t[["Trg", "Delež (%)"]].sort_values("Delež (%)", ascending=False)
-            st.dataframe(t, use_container_width=True, hide_index=True)
+            st.dataframe(t, width="stretch", hide_index=True)
 
         st.caption("Opomba: deleži so izračunani uteženo glede na celotno število prenočitev in nato normalizirani na 100% (zaradi zaokroževanja/manjkajočih trgov).")
 
@@ -1497,13 +1504,13 @@ def render_market_structure(view_title: str, group_col: str, market_cols: list[s
                 legend_title_text = "Trgi"
             )
 
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         with c2:
             st.markdown("**Tabela**")
             t = muni_struct.copy()
             t["Delež (%)"] = (t["Delež_norm"] * 100).round(1)
             t = t[["Trg", "Delež (%)"]].sort_values("Delež (%)", ascending=False)
-            st.dataframe(t, use_container_width=True, hide_index=True)
+            st.dataframe(t, width="stretch", hide_index=True)
 
         st.markdown("**Tabela občin (povzetek)**")
         # povzetek: prikaži top trg (največji delež) za vsako občino + prenočitve
@@ -1521,7 +1528,7 @@ def render_market_structure(view_title: str, group_col: str, market_cols: list[s
 
         tops_view = tops[["Občina", base_weight_col, "Top trg", "Top trg delež (%)"]].copy()
         tops_view = tops_view.sort_values(base_weight_col, ascending=False, na_position="last")
-        st.dataframe(tops_view, use_container_width=True, hide_index=True)
+        st.dataframe(tops_view, width="stretch", hide_index=True)
 
 
 tab_kazalniki, tab_trgi = st.tabs(["Kazalniki", "Struktura prenočitev po trgih"])
