@@ -1104,6 +1104,7 @@ st.markdown(
         font-weight: 500;
         color: #6b6b6b;
         margin-bottom: 8px;
+        max-width: 800px;
     }
     .app-description {
         font-size: 16px;
