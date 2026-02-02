@@ -1117,7 +1117,7 @@ st.markdown(
         Upravljanje turističnih destinacij Slovenije  <span class ="copyright">©</span>
     </div>
     <div class="app-subtitle">
-        Ključni podatki in kazalniki
+        Ključni podatki in kazalniki stanja, stopnje razvoja, vpliva in učinkovitosti upravljanja turizma
 
     </div>
     <div class="app-description">
