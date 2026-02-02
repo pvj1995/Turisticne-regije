@@ -1103,7 +1103,7 @@ st.markdown(
         font-style: italic;
         font-weight: 500;
         color: #6b6b6b;
-        margin-bottom: 8px;
+        
     }
     .app-description {
         font-size: 16px;
