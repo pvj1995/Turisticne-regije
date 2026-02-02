@@ -1099,12 +1099,11 @@ st.markdown(
         vertical-align: super;
         }
     .app-subtitle {
-        font-size: 36px;
+        font-size: 34px;
         font-style: italic;
         font-weight: 500;
         color: #6b6b6b;
         margin-bottom: 8px;
-        max-width: 800px;
     }
     .app-description {
         font-size: 16px;
