@@ -106,8 +106,8 @@ AGG_RULES = {
     'Nastanitvene kapacitete - Nedeljive enote': ("sum", None),
     'Nastanitvene kapacitete - vsa ležišča': ("sum", None),
     'Nastanitvene kapacitete - stalna ležišča': ("sum", None),
-    'Struktura nastanitvenih kapacitet - Sobe (nedeljive enote)\t- Hoteli in podobni obrati': ("sum", None),
-    'Struktura nastanitvenih kapacitet - Sobe (nedeljive enote)\t- Kampi': ("sum", None),
+    'Struktura nastanitvenih kapacitet - Sobe (nedeljive enote) - Hoteli in podobni obrati': ("sum", None),
+    'Struktura nastanitvenih kapacitet - Sobe (nedeljive enote) - Kampi': ("sum", None),
     'Struktura nastanitvenih kapacitet - Sobe (nedeljive enote) - Druge vrste kapacitet': ("sum", None),
     'Struktura nastanitvenih kapacitet - Stalna ležišča - Hoteli in podobni obrati': ("sum", None),
     'Struktura nastanitvenih kapacitet - Stalna ležišča - Kampi': ("sum", None),
@@ -254,7 +254,6 @@ INDIKATORJI_Z_INDEKSI = {
     "Stroški dela na zaposl. na leto v reg. podj. v nast.gost. (I 55) dejavnosti",
     "Celotni prihodki v nastan. dejav. na prenočitev",
     "Ocenjeni prihodki iz nast. dejav. na prenočitev",
-    "Ocenjeni prihodki iz nastan. dej. na razpoložljivo sobo (enoto)",
     "Ocenjeni prihodki iz nast.dej. na prodano sobo (ned.enoto)",
     "Poraba el.energ. v kWh na realiz. 1000 EUR prihodka v Gostinstvu (I)",
     "Skupaj neto prejeti dohodek povp. na prebivalca",
@@ -797,9 +796,9 @@ def aggregate_indicator_with_rules(df: pd.DataFrame, indicator: str, agg_rules: 
 
         values1 = sum(df["Prihodki reg.podjetij in s.p. v nastanitveni dejav. (I 55)"] * 0.8)
         
-        hoteli = sum(df['Struktura nastanitvenih kapacitet - Sobe (nedeljive enote)\t- Hoteli in podobni obrati'])
+        hoteli = sum(df['Struktura nastanitvenih kapacitet - Sobe (nedeljive enote) - Hoteli in podobni obrati'])
         druge_enote = sum(df['Struktura nastanitvenih kapacitet - Sobe (nedeljive enote) - Druge vrste kapacitet'])
-        kampi = sum(df['Struktura nastanitvenih kapacitet - Sobe (nedeljive enote)\t- Kampi'])
+        kampi = sum(df['Struktura nastanitvenih kapacitet - Sobe (nedeljive enote) - Kampi'])
 
         vse_enote = hoteli + druge_enote + kampi
 
@@ -815,9 +814,9 @@ def aggregate_indicator_with_rules(df: pd.DataFrame, indicator: str, agg_rules: 
         
         values1 = sum(df["Prihodki reg.podjetij in s.p. v nastanitveni dejav. (I 55)"] * 0.8)
         
-        hoteli = sum(df['Struktura nastanitvenih kapacitet - Sobe (nedeljive enote)\t- Hoteli in podobni obrati'])
+        hoteli = sum(df['Struktura nastanitvenih kapacitet - Sobe (nedeljive enote) - Hoteli in podobni obrati'])
         druge_enote = sum(df['Struktura nastanitvenih kapacitet - Sobe (nedeljive enote) - Druge vrste kapacitet'])
-        kampi = sum(df['Struktura nastanitvenih kapacitet - Sobe (nedeljive enote)\t- Kampi'])
+        kampi = sum(df['Struktura nastanitvenih kapacitet - Sobe (nedeljive enote) - Kampi'])
 
         values2 = (hoteli + druge_enote) * 365 + kampi * 153
 
