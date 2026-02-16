@@ -52,6 +52,7 @@ require_password()
 
 DATA_XLSX_DEFAULT = "Skupna tabela občine.xlsx"
 GEOJSON_DEFAULT = "si.json"
+MAPPING_XLSX_DEFAULT = "mapping.xlsx"
 SLO_BOUNDS = [[41.00, 10.38], [49.88, 18.61]]
 
 AGG_RULES = {
@@ -556,6 +557,22 @@ def try_load_geojson(path: Path):
             return json.load(f)
     except Exception:
         return None
+
+@st.cache_data(show_spinner=False)
+def load_indicator_groups(path: Path) -> dict[str, list[str]]:
+    if not path.exists():
+        return {}
+    try:
+        df_map = pd.read_excel(path)
+    except Exception:
+        return {}
+    groups = {}
+    for col in df_map.columns:
+        series = df_map[col].dropna().astype(str).str.strip()
+        values = [v for v in series.tolist() if v]
+        if values:
+            groups[col] = values
+    return groups
 
 
 
@@ -1284,6 +1301,17 @@ def render_view(view_title: str, group_col: str):
     meta = meta_cols | {group_col}
     
     indicator_cols = [c for c in df.columns if c not in meta and c not in market_cols]
+    group_map = load_indicator_groups(Path(MAPPING_XLSX_DEFAULT))
+    grouped_filtered = {}
+    leftover = []
+    if group_map:
+        indicator_set = set(indicator_cols)
+        for g, items in group_map.items():
+            filtered = [i for i in items if i in indicator_set]
+            if filtered:
+                grouped_filtered[g] = filtered
+        grouped_all = set(i for items in grouped_filtered.values() for i in items)
+        leftover = [i for i in indicator_cols if i not in grouped_all]
 
     #Za regijo
     df_regions = df[df[group_col].notna()].copy()
@@ -1308,13 +1336,51 @@ def render_view(view_title: str, group_col: str):
     with top_left:
         selected_region = st.selectbox(group_col, regions_with_all, index=0, key=f"sel_group_{group_col}")
     with top_right:
-        map_indicator = st.selectbox("Kazalnik za zemljevid", indicator_cols, index=0, key=f"sel_ind_{group_col}")
+        display_to_group = {}
+        group_options = ["Vsi kazalniki"]
+        if grouped_filtered:
+            for g, items in grouped_filtered.items():
+                label = f"{g} ({len(items)})"
+                display_to_group[label] = g
+                group_options.append(label)
+        if leftover:
+            group_options.append(f"Neuvrščeni ({len(leftover)})")
+
+        selected_group_display = st.selectbox(
+            "Skupina kazalnikov",
+            group_options,
+            index=0,
+            key=f"sel_group_ind_{group_col}",
+        )
+        if selected_group_display == "Vsi kazalniki":
+            group_indicator_cols = indicator_cols
+        elif selected_group_display.startswith("Neuvrščeni"):
+            group_indicator_cols = leftover
+        else:
+            group_indicator_cols = grouped_filtered.get(display_to_group[selected_group_display], indicator_cols)
+
+        if not group_indicator_cols:
+            group_indicator_cols = indicator_cols
+
+        map_indicator = st.selectbox(
+            "Kazalnik za zemljevid",
+            group_indicator_cols,
+            index=0,
+            key=f"sel_ind_{group_col}",
+        )
         show_shared_warning_if_needed_indicator(map_indicator)
 
     dash_inds = []
     if dashboard_mode:
-        default_inds = indicator_cols[:0] if len(indicator_cols) >= 4 else indicator_cols
-        dash_inds = st.multiselect("Kazalniki za dashboard (do 6)", indicator_cols, default=default_inds, max_selections=6, placeholder= "Izberi kazalnik", key=f"dash_{group_col}")
+        default_inds = group_indicator_cols[:0] if len(group_indicator_cols) >= 4 else group_indicator_cols
+        dash_inds = st.multiselect(
+            "Kazalniki za dashboard (do 6)",
+            group_indicator_cols,
+            default=default_inds,
+            max_selections=6,
+            placeholder="Izberi kazalnik",
+            key=f"dash_{group_col}",
+        )
 
     # agregati regij
     agg_needed = [map_indicator] + [i for i in dash_inds if i != map_indicator]
