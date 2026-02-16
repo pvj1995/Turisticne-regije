@@ -53,6 +53,12 @@ require_password()
 DATA_XLSX_DEFAULT = "Skupna tabela občine.xlsx"
 GEOJSON_DEFAULT = "si.json"
 MAPPING_XLSX_DEFAULT = "mapping.xlsx"
+GROUP_COLOR_EMOJI = {
+    "Družbeni kazalniki": "🟦",
+    "Okoljski kazalniki": "🟩",
+    "Ekonomski nastanitveni in tržni turistični kazalniki": "🟥",
+    "Ekonomsko poslovni kazalniki turistične dejavnosti": "🟪",
+}
 SLO_BOUNDS = [[41.00, 10.38], [49.88, 18.61]]
 
 AGG_RULES = {
@@ -1312,6 +1318,10 @@ def render_view(view_title: str, group_col: str):
                 grouped_filtered[g] = filtered
         grouped_all = set(i for items in grouped_filtered.values() for i in items)
         leftover = [i for i in indicator_cols if i not in grouped_all]
+    indicator_to_group = {}
+    for g, items in grouped_filtered.items():
+        for i in items:
+            indicator_to_group.setdefault(i, g)
 
     #Za regijo
     df_regions = df[df[group_col].notna()].copy()
@@ -1340,7 +1350,8 @@ def render_view(view_title: str, group_col: str):
         group_options = ["Vsi kazalniki"]
         if grouped_filtered:
             for g, items in grouped_filtered.items():
-                label = f"{g} ({len(items)})"
+                color_dot = GROUP_COLOR_EMOJI.get(g, "•")
+                label = f"{color_dot} {g} ({len(items)})"
                 display_to_group[label] = g
                 group_options.append(label)
         if leftover:
@@ -1367,6 +1378,7 @@ def render_view(view_title: str, group_col: str):
             group_indicator_cols,
             index=0,
             key=f"sel_ind_{group_col}",
+            format_func=lambda ind: f"{GROUP_COLOR_EMOJI.get(indicator_to_group.get(ind), '•')} {ind}",
         )
         show_shared_warning_if_needed_indicator(map_indicator)
 
@@ -1380,6 +1392,7 @@ def render_view(view_title: str, group_col: str):
             max_selections=6,
             placeholder="Izberi kazalnik",
             key=f"dash_{group_col}",
+            format_func=lambda ind: f"{GROUP_COLOR_EMOJI.get(indicator_to_group.get(ind), '•')} {ind}",
         )
 
     # agregati regij
