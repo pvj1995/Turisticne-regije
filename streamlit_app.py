@@ -116,7 +116,8 @@ AGG_RULES = {
     'Število vseh nastanitvenih obratov 2025': ("sum", None),
     'Nastanitvene kapacitete - Nedeljive enote 2025': ("sum", None),
     'Nastanitvene kapacitete - stalna ležišča 2025': ("sum", None),
-    'Število sob (ned.enot) v kapacitetah višje kakovosti -( 4* in 5*) 2025': ("sum", None),
+    'Število sob (ned.enot) v kapacitetah višje kakovosti - ( 4* in 5*) 2025': ("sum", None),
+    'Delež sob (ned.enot) v kapacitetah višje kakovosti - (4* in 5*) 2025': ("wmean", 'Nastanitvene kapacitete - Nedeljive enote 2025'),
     'Število hotelov ipd. NO 2025': ("sum", None),
     'Število sob v hotelih ipd. NO 2025': ("sum", None),
     'Število stalnih ležišč v hotelih ipd. NO 2025': ("sum", None),
@@ -137,7 +138,7 @@ AGG_RULES = {
     'Povprečna letna zasedenost staln. Ležišč 2024': ("wmean", 'Nastanitvene kapacitete - stalna ležišča'),
     'Povprečna letna zasedenost staln. Ležišč 2025': ("wmean", 'Nastanitvene kapacitete - stalna ležišča 2025'),
     'Ocenjena povp. Letna zased. sob (nedeljivih enot) 2024': ("wmean", 'Nastanitvene kapacitete - Nedeljive enote'),
-    'Ocenjena povp. Letna zased. sob (nedeljivih enot) 2024': ("wmean", 'Nastanitvene kapacitete - Nedeljive enote 2025'),
+    'Ocenjena povp. Letna zased. sob (nedeljivih enot) 2025': ("wmean", 'Nastanitvene kapacitete - Nedeljive enote 2025'),
     'Pritisk turizma na družbeni prostor (število stalnih ležišč / 100 prebivalcev)': ("wmean", 'Število prebivalcev (H2/2024)'),
     'Pritisk turizma na družbeni prostor (število stalnih ležišč / 100 prebivalcev) 2025': ("wmean", 'Število prebivalcev (H2/2025)'),
     'Gostota turizma': ("wmean", 'Površina območja (km2)'),
@@ -402,6 +403,7 @@ def is_rate_like(col: str) -> bool:
         'Rast števila prenočitev 2025/2024 - Domači',
         'Rast števila prenočitev 2025/2024 - Tuji',
         'Delež stalnih ležišč v Hotelih ipd.',
+        'Delež sob (ned.enot) v kapacitetah višje kakovosti - (4* in 5*) 2025',
         'Delež sob (enot) v hotelih ipd. NO 2025',
         'Delež stalnih ležišč v hotelih ipd. NO',
         'Delež sob (enot) v kampih 2025',
@@ -409,6 +411,7 @@ def is_rate_like(col: str) -> bool:
         'Delež sob (enot) v vseh drugih vrstah NO 2025',
         'Povprečna letna zasedenost staln. ležišč',
         'Ocenjena povp. Letna zased. sob (nedeljivih enot)',
+        'Ocenjena povp. Letna zased. sob (nedeljivih enot) 2025',
         "Delež delovno aktivnih od vseh prebivalcev območja",
         "Delež prebivalcev starih 15 let ali več s srednješolsko strokovno ali splošno izobrazbo",
         "Delež prebivalcev starih 15 let ali več z izobrazbo višjo od srednješolske",
@@ -1346,7 +1349,7 @@ def render_view(view_title: str, group_col: str):
         selected_region = st.selectbox(group_col, regions_with_all, index=0, key=f"sel_group_{group_col}")
     with top_right:
         display_to_group = {}
-        group_options = ["Vsi kazalniki"]
+        group_options = [f"Vsi kazalniki ({len(indicator_cols)})"]
         if grouped_filtered:
             for g, items in grouped_filtered.items():
                 color_dot = GROUP_COLOR_EMOJI.get(g, "•")
@@ -1362,7 +1365,7 @@ def render_view(view_title: str, group_col: str):
             index=0,
             key=f"sel_group_ind_{group_col}",
         )
-        if selected_group_display == "Vsi kazalniki":
+        if selected_group_display == f"Vsi kazalniki ({len(indicator_cols)})":
             group_indicator_cols = indicator_cols
         elif selected_group_display.startswith("Neuvrščeni"):
             group_indicator_cols = leftover
